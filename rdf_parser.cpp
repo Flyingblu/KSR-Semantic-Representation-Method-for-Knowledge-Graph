@@ -10,63 +10,100 @@
 
 using namespace std;
 
-void Rdf_parser::put_to_map(map<string, int>& target_map, string& key, int& id_pos) {
+void RDFParser::put_to_map(map<string, long long>& target_map, string& key, long long& id_pos) {
+
     if(target_map.find(key) == target_map.end()) {
+
         target_map[key] = id_pos;
         id_pos += 1;
     }
 }
 
-void Rdf_parser::parse(int lines = -1) {
-    string line;
-    if(lines == -1) {
-        for(int i = 0;getline(*(this->rdf_file), line); i++) {
-        int state = 0;
-        auto start = line.begin();
-        for(auto i = line.begin(); i != line.end(); i++) {
-            if(*i == ' ') {
-                string tmp(start, i);
-                if(state == 0) {
-                    this->put_to_map(this->entities, tmp, this->ent_pos);
-                    start = i + 1;
-                    state += 1;
-                } else if(state == 1) {
-                    this->put_to_map(this->properties, tmp, this->prop_pos);
-                    start = i + 1;
-                    state += 1;
-                } else if(state == 2) {
-                    this->put_to_map(this->entities, tmp, this->ent_pos);
-                    break;
-                }
+void RDFParser::triple_parser(string& triple) {
+    int state = 0;
+    auto start = triple.begin();
+
+    for(auto i = triple.begin(); i != triple.end(); i++) {
+
+        if(*i == ' ') {
+
+            string tmp(start, i);
+
+            if(state == 0) {
+
+                this->put_to_map(this->entities, tmp, this->ent_pos);
+                start = i + 1;
+                state += 1;
+
+            } else if(state == 1) {
+
+                this->put_to_map(this->properties, tmp, this->prop_pos);
+                start = i + 1;
+                state += 1;
+
+            } else if(state == 2) {
+                
+                this->put_to_map(this->entities, tmp, this->ent_pos);
+                break;
             }
         }
-    }
-    } else {
-        for(int i = 0; i < lines && getline(*(this->rdf_file), line); i++) {
-        int state = 0;
-        auto start = line.begin();
-        for(auto i = line.begin(); i != line.end(); i++) {
-            if(*i == ' ') {
-                string tmp(start, i);
-                if(state == 0) {
-                    this->put_to_map(this->entities, tmp, this->ent_pos);
-                    start = i + 1;
-                    state += 1;
-                } else if(state == 1) {
-                    this->put_to_map(this->properties, tmp, this->prop_pos);
-                    start = i + 1;
-                    state += 1;
-                } else if(state == 2) {
-                    this->put_to_map(this->entities, tmp, this->ent_pos);
-                    break;
-                }
-            }
-        }
-    }
     }
 }
 
-void Rdf_parser::to_json(string path) {
+bool RDFParser::batch_parser(long long batch_size) {
+    string line;
+    bool end = true;
+
+    for(long long i = 0; i < batch_size; ++i) {
+
+        if(getline(*(this->rdf_file), line)) {
+            this->triple_parser(line);
+
+        } else {
+            end = false;
+            break;
+        }
+    }
+    return end;
+}
+
+void RDFParser::parse(long long lines=-1, long long batch_size=1e8) {
+
+    string line;
+
+    if(lines == -1) {
+        
+        while(this->batch_parser(batch_size)) {
+            this->to_json;
+            this->entities.clear();
+            this->properties.clear();
+        }
+
+    } else {
+        long long pos = 0;
+        bool end = true;
+
+        while(end) {
+
+            if(pos + batch_size < lines) {
+
+                end = this->batch_parser(batch_size);
+                pos += batch_size;
+
+            } else {
+
+                end = false;
+                this->batch_parser(lines - pos);
+            }
+
+            this->to_json;
+            this->entities.clear();
+            this->properties.clear();
+        }
+    }
+}
+
+void RDFParser::to_json(string path) {
     ofstream json_file(path);
     nlohmann::json j;
     j["entities"] = this->entities;
