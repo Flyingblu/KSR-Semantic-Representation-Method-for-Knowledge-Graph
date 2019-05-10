@@ -1,0 +1,8 @@
+
+*.bin
+
+*.ipch
+
+json\.h
+
+makefile
