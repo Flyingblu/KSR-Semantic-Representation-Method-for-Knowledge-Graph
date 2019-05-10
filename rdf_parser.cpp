@@ -21,12 +21,15 @@ void RDFParser::put_to_map(unordered_map<string, long long>& target_map, string&
 
 void RDFParser::triple_parser(string& triple) {
     int state = 0;
+    bool is_blank = false;
     auto start = triple.begin();
 
     for(auto i = triple.begin(); i != triple.end(); i++) {
 
         if(*i == ' ') {
-
+            if(is_blank) {
+                continue;
+            }
             string tmp(start, i);
 
             if(state == 0) {
@@ -46,6 +49,9 @@ void RDFParser::triple_parser(string& triple) {
                 this->put_to_map(this->entities, tmp, this->ent_pos);
                 break;
             }
+            is_blank = true;
+        } else {
+            is_blank = false;
         }
     }
 }
