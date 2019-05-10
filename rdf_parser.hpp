@@ -18,21 +18,23 @@
 
 using namespace std;
 
-class Rdf_parser {
+class RDFParser {
 public:
-    Rdf_parser(string path): rdf_file(new ifstream(path)) {} ;
-    ~Rdf_parser() {
+    RDFParser(string path): rdf_file(new ifstream(path)) {} ;
+    ~RDFParser() {
         delete this->rdf_file;
     }
-    void parse(int);
+    void parse(long long lines=-1, long long batch_size=1e8);
     void to_json(string);
 private:
     ifstream * rdf_file;
-    int ent_pos = 0;
-    int prop_pos = 0;
-    map<string, int> entities;
-    map<string, int> properties;
-    void put_to_map(map<string, int>&, string&, int&);
+    long long ent_pos = 0;
+    long long prop_pos = 0;
+    map<string, long long> entities;
+    map<string, long long> properties;
+    void put_to_map(map<string, long long>&, string&, long long&);
+    void triple_parser(string&);
+    bool batch_parser(long long);
 };
 
 #endif /* rdf_parser_hpp */
