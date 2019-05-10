@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void RDFParser::put_to_map(map<string, long long>& target_map, string& key, long long& id_pos) {
+void RDFParser::put_to_map(unordered_map<string, long long>& target_map, string& key, long long& id_pos) {
 
     if(target_map.find(key) == target_map.end()) {
 
@@ -67,16 +67,22 @@ bool RDFParser::batch_parser(long long batch_size) {
     return end;
 }
 
-void RDFParser::parse(long long lines=-1, long long batch_size=1e8) {
+void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
 
     string line;
 
     if(lines == -1) {
+        bool remain = true;
         
-        while(this->batch_parser(batch_size)) {
-            this->to_json;
-            this->entities.clear();
-            this->properties.clear();
+        while(remain) {
+            
+            remain = this->batch_parser(batch_size);
+            if(save_file) {
+                MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
+                MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
+                this->entities.clear();
+                this->properties.clear();
+            }
         }
 
     } else {
@@ -95,10 +101,12 @@ void RDFParser::parse(long long lines=-1, long long batch_size=1e8) {
                 end = false;
                 this->batch_parser(lines - pos);
             }
-
-            this->to_json;
-            this->entities.clear();
-            this->properties.clear();
+            if(save_file) {
+                MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
+                MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
+                this->entities.clear();
+                this->properties.clear();
+            }
         }
     }
 }
@@ -110,4 +118,9 @@ void RDFParser::to_json(string path) {
     j["properties"] = this->properties;
     json_file << setw(4) << j;
     json_file.close();
+}
+
+void RDFParser::retrivial() {
+    MapSerializer::map_deserialize(this->entities, this->save_path + "entities.data");
+    MapSerializer::map_deserialize(this->properties, this->save_path + "properties.data");
 }

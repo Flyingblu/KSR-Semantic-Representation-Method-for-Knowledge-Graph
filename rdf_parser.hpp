@@ -11,30 +11,39 @@
 
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <iomanip>
 #include "json.h"
+#include "map_serializer.hpp"
 
 using namespace std;
 
 class RDFParser {
 public:
-    RDFParser(string path): rdf_file(new ifstream(path)) {} ;
+    
+    RDFParser(string read_path, string save_path): rdf_file(new ifstream(read_path)), save_path(save_path) {} ;
     ~RDFParser() {
         delete this->rdf_file;
     }
-    void parse(long long lines=-1, long long batch_size=1e8);
+    
+    void parse(long long lines=-1, long long batch_size=1e8, bool save_file=false);
+    void retrivial();
     void to_json(string);
+    
+    string save_path;
+    
 private:
+    
     ifstream * rdf_file;
     long long ent_pos = 0;
     long long prop_pos = 0;
-    map<string, long long> entities;
-    map<string, long long> properties;
-    void put_to_map(map<string, long long>&, string&, long long&);
+    unordered_map<string, long long> entities;
+    unordered_map<string, long long> properties;
+    void put_to_map(unordered_map<string, long long>&, string&, long long&);
     void triple_parser(string&);
     bool batch_parser(long long);
+    
 };
 
 #endif /* rdf_parser_hpp */

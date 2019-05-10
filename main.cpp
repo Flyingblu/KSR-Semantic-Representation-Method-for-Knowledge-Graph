@@ -14,12 +14,10 @@
 
 using namespace std;
 
-void triple_parser(string triple) {
-}
-
 int main(int argc, const char * argv[]) {
-    RDFParser rdf("/home/flyingblu/Downloads/latest-lexemes.nt");
-    rdf.parse();
-    rdf.to_json("/home/flyingblu/Downloads/out.json");
+    RDFParser rdf("PATH_TO_RDF_FILE", "PATH_TO_SAVE_FILE");
+    rdf.parse(-1, 1e8, true);
+    rdf.retrivial();
+    rdf.to_json("PATH_TO_JSON_FILE");
     return 0;
 }
