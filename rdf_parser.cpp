@@ -21,37 +21,73 @@ void RDFParser::put_to_map(unordered_map<string, long long>& target_map, string&
 
 void RDFParser::triple_parser(string& triple) {
     int state = 0;
+    int f_state = 0;
+    auto add_to_map = [=](string::iterator start, string::iterator end, int & s) -> void {
+        string tmp(start, end);
+        switch (s)
+        {
+        case 0:
+            this->put_to_map(this->entities, tmp, this->ent_pos);
+            break;
+        
+        case 1:
+            this->put_to_map(this->properties, tmp, this->prop_pos);
+            break;
+        case 2:
+            this->put_to_map(this->entities, tmp, this->ent_pos);
+            break;
+
+        default:
+            break;
+
+        }
+        ++s;
+        return;
+    };
     bool is_blank = false;
     auto start = triple.begin();
 
     for(auto i = triple.begin(); i != triple.end(); i++) {
 
-        if(*i == ' ') {
-            if(is_blank) {
-                continue;
+        if (f_state == 0) {
+
+            if (*i == '<') {
+
+                f_state = 1;
+                start = i;
+
+            } else if (*i == '"') {
+
+                f_state = 2;
+                start = i;
+
             }
-            string tmp(start, i);
+        } else if (f_state == 1) {
 
-            if(state == 0) {
+            if (*i == ' ' || *i == '\t') {
 
-                this->put_to_map(this->entities, tmp, this->ent_pos);
-                start = i + 1;
-                state += 1;
+                f_state = 0;
+                add_to_map(start, i, state);
 
-            } else if(state == 1) {
+                if (state == 3)
+                    break;
 
-                this->put_to_map(this->properties, tmp, this->prop_pos);
-                start = i + 1;
-                state += 1;
-
-            } else if(state == 2) {
-                
-                this->put_to_map(this->entities, tmp, this->ent_pos);
-                break;
             }
-            is_blank = true;
-        } else {
-            is_blank = false;
+        } else if (f_state == 2) {
+
+            if (*i == '"') {
+
+                f_state = 1;
+
+            } else if (*i == '\\') {
+
+                f_state = 3;
+
+            }
+        } else if (f_state == 3) {
+
+            f_state = 2;
+
         }
     }
 }
