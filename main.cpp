@@ -15,9 +15,9 @@
 using namespace std;
 
 int main(int argc, const char * argv[]) {
-    RDFParser rdf("PATH_TO_RDF_FILE", "PATH_TO_SAVE_FILE");
+    RDFParser rdf("/PATH/TO/RDF_FILE", "/DIRECTORY/PATH/OF/TARGET_FILE/");
     rdf.parse(-1, 1e8, true);
     rdf.retrivial();
-    rdf.to_json("PATH_TO_JSON_FILE");
+    rdf.to_json("/PATH/TO/JSON_FILE.json");
     return 0;
 }
