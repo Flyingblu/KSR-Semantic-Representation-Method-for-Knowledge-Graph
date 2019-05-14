@@ -16,6 +16,7 @@
 #include <iomanip>
 #include "json.h"
 #include "map_serializer.hpp"
+#include <tuple>
 
 using namespace std;
 
@@ -40,7 +41,8 @@ private:
     long long prop_pos = 0;
     unordered_map<string, long long> entities;
     unordered_map<string, long long> properties;
-    void put_to_map(unordered_map<string, long long>&, string&, long long&);
+    vector<tuple<long long, long long, long long> > triples;
+    long long put_to_map(unordered_map<string, long long>&, string&, long long&);
     void triple_parser(string&);
     bool batch_parser(long long);
     

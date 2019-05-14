@@ -10,31 +10,36 @@
 
 using namespace std;
 
-void RDFParser::put_to_map(unordered_map<string, long long>& target_map, string& key, long long& id_pos) {
+long long RDFParser::put_to_map(unordered_map<string, long long>& target_map, string& key, long long& id_pos) {
 
-    if(target_map.find(key) == target_map.end()) {
+    auto i = target_map.find(key);
+    if(i == target_map.end()) {
 
         target_map[key] = id_pos;
         id_pos += 1;
+        return id_pos - 1;
     }
+    return i->second;
 }
 
 void RDFParser::triple_parser(string& triple) {
     int state = 0;
     int f_state = 0;
-    auto add_to_map = [=](string::iterator start, string::iterator end, int & s) -> void {
+    long long triple_arr[3];
+    auto add_to_map = [=](string::iterator start, string::iterator end, int & s, long long * tri) -> void {
         string tmp(start, end);
         switch (s)
         {
         case 0:
-            this->put_to_map(this->entities, tmp, this->ent_pos);
+            tri[s] = this->put_to_map(this->entities, tmp, this->ent_pos);
             break;
         
         case 1:
-            this->put_to_map(this->properties, tmp, this->prop_pos);
+            tri[s] = this->put_to_map(this->properties, tmp, this->prop_pos);
             break;
+
         case 2:
-            this->put_to_map(this->entities, tmp, this->ent_pos);
+            tri[s] = this->put_to_map(this->entities, tmp, this->ent_pos);
             break;
 
         default:
@@ -67,10 +72,12 @@ void RDFParser::triple_parser(string& triple) {
             if (*i == ' ' || *i == '\t') {
 
                 f_state = 0;
-                add_to_map(start, i, state);
+                add_to_map(start, i, state, triple_arr);
 
-                if (state == 3)
+                if (state == 3) {
+                    this->triples.push_back(make_tuple(triple_arr[0], triple_arr[1], triple_arr[2]));
                     break;
+                }
 
             }
         } else if (f_state == 2) {
@@ -122,8 +129,10 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
             if(save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
                 MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
+                MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
                 this->entities.clear();
                 this->properties.clear();
+                this->triples.clear();
             }
         }
 
@@ -146,6 +155,7 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
             if(save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
                 MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
+                MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
                 this->entities.clear();
                 this->properties.clear();
             }
@@ -158,6 +168,7 @@ void RDFParser::to_json(string path) {
     nlohmann::json j;
     j["entities"] = this->entities;
     j["properties"] = this->properties;
+    j["triples"] = this->triples;
     json_file << setw(4) << j;
     json_file.close();
 }
@@ -165,4 +176,5 @@ void RDFParser::to_json(string path) {
 void RDFParser::retrivial() {
     MapSerializer::map_deserialize(this->entities, this->save_path + "entities.data");
     MapSerializer::map_deserialize(this->properties, this->save_path + "properties.data");
+    MapSerializer::triple_deserialize(this->triples, this->save_path + "triples.data");
 }
