@@ -135,9 +135,9 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
                 MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
                 MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
-                this->entities.clear();
-                this->properties.clear();
-                this->triples.clear();
+                //this->entities.clear();
+                //this->properties.clear();
+                //this->triples.clear();
             }
         }
 
@@ -161,8 +161,9 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
                 MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
                 MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
-                this->entities.clear();
-                this->properties.clear();
+                //this->entities.clear();
+                //this->properties.clear();
+                //this->triples.clear();   
             }
         }
     }
@@ -180,6 +181,12 @@ void RDFParser::to_json(string path) {
     j["triples"] = this->triples;
     json_file << setw(4) << j;
     json_file.close();
+}
+
+void RDFParser::to_text(string path)
+{
+    MapSerializer::map_to_text(this->entities, path + "entities.text");
+    MapSerializer::map_to_text(this->properties, path + "properties.text");
 }
 
 void RDFParser::retrivial() {

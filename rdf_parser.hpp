@@ -32,7 +32,10 @@ public:
     void parse(long long lines=-1, long long batch_size=1e8, bool save_file=false);
     void retrivial();
     void to_json(string);
-    
+    void to_text(string);
+    unordered_map<string, long long> entities;
+    unordered_map<string, long long> properties;
+    vector<tuple<long long, long long, long long> > triples;
     string save_path;
     
 private:
@@ -40,9 +43,7 @@ private:
     ifstream * rdf_file;
     long long ent_pos = 0;
     long long prop_pos = 0;
-    unordered_map<string, long long> entities;
-    unordered_map<string, long long> properties;
-    vector<tuple<long long, long long, long long> > triples;
+    
     long long put_to_map(unordered_map<string, long long>&, string&, long long&);
     void triple_parser(string&);
     bool batch_parser(long long, ProgressBar&);
