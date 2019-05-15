@@ -8,21 +8,43 @@
 
 #include "progress_bar.hpp"
 
-void ProgressBar::progress_increment(int progress) {
-  this->progress += progress;
-  float percentage = float(this->progress) / float(this->graduation);
-  int blocks = percentage * this->length;
-  string output = this->message + "\t" + "[";
-  for(int i = 0; i < this->length; ++i) {
-    if(i < blocks) {
-      output.push_back('=');
-    } else {
-      output.push_back(' ');
-    }
+void ProgressBar::progress_increment(long long progress) {
+
+  if (this->ended) {
+    cerr << "ProgressBar: progress already ended! " << endl;
+    return;
   }
-  cout << output << ']' << '\r' << flush;
+
+  string output = this->message + "\t";
+  this->progress += progress;
+  printf("%c[2K", 27);
+  cout << '\r';
+  if(this->graduation != -1) {
+
+    double percentage = double(this->progress) / double(this->graduation);
+    cout << setprecision(4) << output << percentage * 100 << '%' << '\r' << flush;
+
+  } else {
+
+    cout << output << this->progress << '\r' << flush;
+  }
 }
 
 void ProgressBar::progress_end() {
+
+  if (this->ended) {
+
+      cerr << "ProgressBar: progress already ended! " << endl;
+      return;
+  }
+
+  this->ended = true;
   cout << endl;
+
+  auto end_time = std::chrono::system_clock::now();
+  chrono::duration<double> elapsed_seconds = end_time-this->start_time;
+  time_t end_time_t = std::chrono::system_clock::to_time_t(end_time);
+
+  cout << "Finished at: " << ctime(&end_time_t);
+  cout << "Elapsed time: " << elapsed_seconds.count() << 's' << endl;
 }

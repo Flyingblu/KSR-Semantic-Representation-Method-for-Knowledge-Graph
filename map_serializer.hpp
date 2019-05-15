@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <vector>
+#include "progress_bar.hpp"
 
 using namespace std;
 

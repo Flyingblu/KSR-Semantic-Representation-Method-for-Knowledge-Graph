@@ -5,3 +5,5 @@ json\.h
 
 rdf_parser
 .DS_Store
+
+main\.cpp\.local

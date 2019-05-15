@@ -11,19 +11,28 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
 
 using namespace std;
 
 class ProgressBar {
   public:
-    ProgressBar(string prompt_message, int graduation):message(prompt_message), graduation(graduation) {} ;
-    void progress_increment(int progress = 1);
+    ProgressBar(string prompt_message, long long graduation = -1):
+      message(prompt_message), 
+      graduation(graduation), 
+      start_time(chrono::system_clock::now()) {
+        cout << endl;
+      } ;
+    void progress_increment(long long progress = 1);
     void progress_end();
   private:
     string message;
-    int graduation;
-    int progress = 0;
-    int length = 50;
+    long long graduation;
+    long long progress = 0;
+    bool ended = false;
+    std::chrono::time_point<std::chrono::_V2::system_clock, std::chrono::nanoseconds> start_time;
 };
 
 #endif /* progress_bar_hpp */

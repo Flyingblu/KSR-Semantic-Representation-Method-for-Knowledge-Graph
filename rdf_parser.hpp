@@ -14,9 +14,10 @@
 #include <unordered_map>
 #include <string>
 #include <iomanip>
+#include <tuple>
 #include "json.h"
 #include "map_serializer.hpp"
-#include <tuple>
+#include "progress_bar.hpp"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ private:
     vector<tuple<long long, long long, long long> > triples;
     long long put_to_map(unordered_map<string, long long>&, string&, long long&);
     void triple_parser(string&);
-    bool batch_parser(long long);
+    bool batch_parser(long long, ProgressBar&);
     
 };
 

@@ -99,7 +99,7 @@ void RDFParser::triple_parser(string& triple) {
     }
 }
 
-bool RDFParser::batch_parser(long long batch_size) {
+bool RDFParser::batch_parser(long long batch_size, ProgressBar& prog_bar) {
     string line;
     bool end = true;
 
@@ -112,6 +112,10 @@ bool RDFParser::batch_parser(long long batch_size) {
             end = false;
             break;
         }
+
+        if(i % 100 == 0) {
+            prog_bar.progress_increment(100);
+        }
     }
     return end;
 }
@@ -119,13 +123,14 @@ bool RDFParser::batch_parser(long long batch_size) {
 void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
 
     string line;
+    ProgressBar prog_bar("Triples parsed:");
 
     if(lines == -1) {
         bool remain = true;
         
         while(remain) {
             
-            remain = this->batch_parser(batch_size);
+            remain = this->batch_parser(batch_size, prog_bar);
             if(save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
                 MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
@@ -144,13 +149,13 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
 
             if(pos + batch_size < lines) {
 
-                end = this->batch_parser(batch_size);
+                end = this->batch_parser(batch_size, prog_bar);
                 pos += batch_size;
 
             } else {
 
                 end = false;
-                this->batch_parser(lines - pos);
+                this->batch_parser(lines - pos, prog_bar);
             }
             if(save_file) {
                 MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
@@ -161,9 +166,13 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
             }
         }
     }
+    prog_bar.progress_end();
 }
 
 void RDFParser::to_json(string path) {
+
+    cout << "Saving to JSON..." << endl;
+
     ofstream json_file(path);
     nlohmann::json j;
     j["entities"] = this->entities;
