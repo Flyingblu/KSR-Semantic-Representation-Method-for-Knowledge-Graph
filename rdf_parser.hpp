@@ -34,9 +34,9 @@ public:
     void to_json(string);
     void to_text(string);
     void clear_data();
-    unordered_map<string, long long> entities;
-    unordered_map<string, long long> properties;
-    vector<tuple<long long, long long, long long> > triples;
+    unordered_map<string, unsigned int> entities;
+    unordered_map<string, unsigned int> properties;
+    vector<tuple<unsigned int, unsigned int, unsigned int> > triples;
     string save_path;
     
 private:
@@ -44,9 +44,6 @@ private:
     ifstream * rdf_file;
     unsigned int ent_pos = 0;
     unsigned int prop_pos = 0;
-    unordered_map<string, unsigned int> entities;
-    unordered_map<string, unsigned int> properties;
-    vector<tuple<unsigned int, unsigned int, unsigned int> > triples;
     unsigned int put_to_map(unordered_map<string, unsigned int>&, string&, unsigned int&);
     void triple_parser(string&);
     bool batch_parser(unsigned int, ProgressBar&);

@@ -112,7 +112,7 @@ void MapSerializer::triple_deserialize(vector<tuple<unsigned int, unsigned int, 
     }
 }
 
-void MapSerializer::map_compare(const unordered_map<string, long long>& a, const unordered_map<string, long long>& b, string path, string name)
+void MapSerializer::map_compare(const unordered_map<string, unsigned int>& a, const unordered_map<string, unsigned int>& b, string path, string name)
 {
     ofstream file(path + name + "_compare", ios::out);
 
@@ -143,12 +143,12 @@ void MapSerializer::map_compare(const unordered_map<string, long long>& a, const
 
 }
 
-void MapSerializer::map_to_text(const unordered_map<string, long long>& source_map, string path)
+void MapSerializer::map_to_text(const unordered_map<string, unsigned int>& source_map, string path)
 {
     ofstream file(path, ios::out);
     ProgressBar prog_bar("Serializing map to text file:", source_map.size());
     auto iter = source_map.begin();
-    long long cnt = 0;
+    unsigned int cnt = 0;
 
     while(iter != source_map.end())
     {

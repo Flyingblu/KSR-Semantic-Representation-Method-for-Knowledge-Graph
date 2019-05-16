@@ -24,8 +24,8 @@ namespace MapSerializer {
     void map_deserialize(unordered_map<string, unsigned int>&, string);
     void triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string);
     void triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string);
-    void map_compare(const unordered_map<string, long long>& , const unordered_map<string, long long>&, string, string);
-    void map_to_text(const unordered_map<string, long long>&, string);
+    void map_compare(const unordered_map<string, unsigned int>& , const unordered_map<string, unsigned int>&, string, string);
+    void map_to_text(const unordered_map<string, unsigned int>&, string);
 }
 
 #endif /* map_serializer_hpp */
