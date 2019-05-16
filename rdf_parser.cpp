@@ -10,7 +10,7 @@
 
 using namespace std;
 
-long long RDFParser::put_to_map(unordered_map<string, long long>& target_map, string& key, long long& id_pos) {
+unsigned int RDFParser::put_to_map(unordered_map<string, unsigned int>& target_map, string& key, unsigned int& id_pos) {
 
     auto i = target_map.find(key);
     if(i == target_map.end()) {
@@ -25,8 +25,8 @@ long long RDFParser::put_to_map(unordered_map<string, long long>& target_map, st
 void RDFParser::triple_parser(string& triple) {
     int state = 0;
     int f_state = 0;
-    long long triple_arr[3];
-    auto add_to_map = [=](string::iterator start, string::iterator end, int & s, long long * tri) -> void {
+    unsigned int triple_arr[3];
+    auto add_to_map = [=](string::iterator start, string::iterator end, int & s, unsigned int * tri) -> void {
         string tmp(start, end);
         switch (s)
         {
@@ -99,11 +99,11 @@ void RDFParser::triple_parser(string& triple) {
     }
 }
 
-bool RDFParser::batch_parser(long long batch_size, ProgressBar& prog_bar) {
+bool RDFParser::batch_parser(unsigned int batch_size, ProgressBar& prog_bar) {
     string line;
     bool end = true;
 
-    for(long long i = 0; i < batch_size; ++i) {
+    for(unsigned int i = 0; i < batch_size; ++i) {
 
         if(getline(*(this->rdf_file), line)) {
             this->triple_parser(line);
@@ -120,7 +120,7 @@ bool RDFParser::batch_parser(long long batch_size, ProgressBar& prog_bar) {
     return end;
 }
 
-void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
+void RDFParser::parse(unsigned int lines, unsigned int batch_size, bool save_file) {
 
     string line;
     ProgressBar prog_bar("Triples parsed:");
@@ -139,7 +139,7 @@ void RDFParser::parse(long long lines, long long batch_size, bool save_file) {
         }
 
     } else {
-        long long pos = 0;
+        unsigned int pos = 0;
         bool end = true;
 
         while(end) {

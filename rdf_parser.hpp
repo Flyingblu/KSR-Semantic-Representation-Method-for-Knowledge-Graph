@@ -29,7 +29,7 @@ public:
         delete this->rdf_file;
     }
     
-    void parse(long long lines=-1, long long batch_size=1e8, bool save_file=false);
+    void parse(unsigned int lines=-1, unsigned int batch_size=1e8, bool save_file=false);
     void retrivial();
     void to_json(string);
     void to_text(string);
@@ -42,12 +42,14 @@ public:
 private:
     
     ifstream * rdf_file;
-    long long ent_pos = 0;
-    long long prop_pos = 0;
-    
-    long long put_to_map(unordered_map<string, long long>&, string&, long long&);
+    unsigned int ent_pos = 0;
+    unsigned int prop_pos = 0;
+    unordered_map<string, unsigned int> entities;
+    unordered_map<string, unsigned int> properties;
+    vector<tuple<unsigned int, unsigned int, unsigned int> > triples;
+    unsigned int put_to_map(unordered_map<string, unsigned int>&, string&, unsigned int&);
     void triple_parser(string&);
-    bool batch_parser(long long, ProgressBar&);
+    bool batch_parser(unsigned int, ProgressBar&);
     
 };
 
