@@ -33,6 +33,7 @@ public:
     void retrivial();
     void to_json(string);
     void to_text(string);
+    void clear_data();
     unordered_map<string, long long> entities;
     unordered_map<string, long long> properties;
     vector<tuple<long long, long long, long long> > triples;
