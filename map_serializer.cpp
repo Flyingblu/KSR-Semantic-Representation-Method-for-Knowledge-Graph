@@ -11,7 +11,7 @@
 void MapSerializer::map_serialize(const unordered_map<string, unsigned int>& source_map, string path) {
     ofstream file(path, ios_base::binary);
     ProgressBar prog_bar("Serializing map to binary file:", source_map.size());
-    unsigned int cnt = 0;
+    size_t cnt = 0;
 
     size_t map_size = source_map.size();
     file.write((char *)&map_size, sizeof(size_t));
@@ -68,7 +68,7 @@ void MapSerializer::map_deserialize(unordered_map<string, unsigned int>& target_
 void MapSerializer::triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path) {
     ofstream file(path, ios_base::binary);
     ProgressBar prog_bar("Serializing triples to binary file:", triples.size());
-    unsigned int cnt = 0;
+    size_t cnt = 0;
     
     size_t vector_size = triples.size();
     file.write((char *)&vector_size, sizeof(size_t));

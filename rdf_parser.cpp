@@ -49,7 +49,7 @@ void RDFParser::triple_parser(string& triple) {
         ++state;
         return;
     };
-    bool is_blank = false;
+
     auto start = triple.begin();
 
     for(auto i = triple.begin(); i != triple.end(); i++) {
