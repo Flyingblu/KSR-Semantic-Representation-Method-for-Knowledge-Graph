@@ -29,7 +29,7 @@ public:
         delete this->rdf_file;
     }
     
-    void parse(unsigned int lines=-1, unsigned int batch_size=1e8, bool save_file=false);
+    void parse(unsigned int lines=-1, bool save_file=false);
     void retrivial();
     void to_json(string);
     void to_text(string);
@@ -46,7 +46,6 @@ private:
     unsigned int prop_pos = 0;
     unsigned int put_to_map(unordered_map<string, unsigned int>&, string&, unsigned int&);
     void triple_parser(string&);
-    bool batch_parser(unsigned int, ProgressBar&);
     
 };
 

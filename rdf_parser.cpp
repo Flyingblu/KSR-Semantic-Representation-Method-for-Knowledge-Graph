@@ -26,27 +26,27 @@ void RDFParser::triple_parser(string& triple) {
     int state = 0;
     int f_state = 0;
     unsigned int triple_arr[3];
-    auto add_to_map = [=](string::iterator start, string::iterator end, int & s, unsigned int * tri) -> void {
+    auto add_to_map = [&](string::iterator start, string::iterator end) -> void {
         string tmp(start, end);
-        switch (s)
+        switch (state)
         {
         case 0:
-            tri[s] = this->put_to_map(this->entities, tmp, this->ent_pos);
+            triple_arr[state] = this->put_to_map(this->entities, tmp, this->ent_pos);
             break;
         
         case 1:
-            tri[s] = this->put_to_map(this->properties, tmp, this->prop_pos);
+            triple_arr[state] = this->put_to_map(this->properties, tmp, this->prop_pos);
             break;
 
         case 2:
-            tri[s] = this->put_to_map(this->entities, tmp, this->ent_pos);
+            triple_arr[state] = this->put_to_map(this->entities, tmp, this->ent_pos);
             break;
 
         default:
             break;
 
         }
-        ++s;
+        ++state;
         return;
     };
     bool is_blank = false;
@@ -72,7 +72,7 @@ void RDFParser::triple_parser(string& triple) {
             if (*i == ' ' || *i == '\t') {
 
                 f_state = 0;
-                add_to_map(start, i, state, triple_arr);
+                add_to_map(start, i);
 
                 if (state == 3) {
                     this->triples.push_back(make_tuple(triple_arr[0], triple_arr[1], triple_arr[2]));
@@ -99,68 +99,43 @@ void RDFParser::triple_parser(string& triple) {
     }
 }
 
-bool RDFParser::batch_parser(unsigned int batch_size, ProgressBar& prog_bar) {
-    string line;
-    bool end = true;
-
-    for(unsigned int i = 0; i < batch_size; ++i) {
-
-        if(getline(*(this->rdf_file), line)) {
-            this->triple_parser(line);
-
-        } else {
-            end = false;
-            break;
-        }
-
-        if(i % 100 == 0) {
-            prog_bar.progress_increment(100);
-        }
-    }
-    return end;
-}
-
-void RDFParser::parse(unsigned int lines, unsigned int batch_size, bool save_file) {
+void RDFParser::parse(unsigned int lines, bool save_file) {
 
     string line;
     ProgressBar prog_bar("Triples parsed:");
+    unsigned int cnt_lines;
 
     if(lines == -1) {
-        bool remain = true;
-        
-        while(remain) {
-            
-            remain = this->batch_parser(batch_size, prog_bar);
-            if(save_file) {
-                MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
-                MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
-                MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
+        // lines is -1 means parsing the entire file
+        cnt_lines = 0;
+        while(getline(*(this->rdf_file), line)) {
+
+            ++cnt_lines;
+            this->triple_parser(line);
+
+            if(cnt_lines % 100 == 0) {
+                prog_bar.progress_increment(100);
             }
         }
-
     } else {
-        unsigned int pos = 0;
-        bool end = true;
+        // When lines is not -1 it means parsing that many lines
+        //Here cnt_lines starts counting at 1 to make the progress bar behave normally
+        for(cnt_lines = 1;getline(*(this->rdf_file), line) && cnt_lines <= lines; ++cnt_lines) {
 
-        while(end) {
+            this->triple_parser(line);
 
-            if(pos + batch_size < lines) {
-
-                end = this->batch_parser(batch_size, prog_bar);
-                pos += batch_size;
-
-            } else {
-
-                end = false;
-                this->batch_parser(lines - pos, prog_bar);
-            }
-            if(save_file) {
-                MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
-                MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
-                MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
+            if(cnt_lines % 100 == 0) {
+                prog_bar.progress_increment(100);
             }
         }
     }
+
+    if(save_file) {
+            MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");
+            MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
+            MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
+    }
+
     prog_bar.progress_end();
 }
 

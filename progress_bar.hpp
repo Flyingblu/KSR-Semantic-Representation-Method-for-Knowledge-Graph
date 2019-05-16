@@ -32,7 +32,7 @@ class ProgressBar {
     long long graduation;
     long long progress = 0;
     bool ended = false;
-    std::chrono::time_point<std::chrono::_V2::system_clock, std::chrono::nanoseconds> start_time;
+     std::chrono::time_point<std::chrono::system_clock> start_time;
 };
 
 #endif /* progress_bar_hpp */
