@@ -8,10 +8,13 @@
 
 #include "map_serializer.hpp"
 
-void MapSerializer::map_serialize(const unordered_map<string, long long>& source_map, string path) {
-    ofstream file(path, ios_base::binary | ios_base::app);
+void MapSerializer::map_serialize(const unordered_map<string, unsigned int>& source_map, string path) {
+    ofstream file(path, ios_base::binary);
     ProgressBar prog_bar("Serializing map to binary file:", source_map.size());
-    long long cnt = 0;
+    unsigned int cnt = 0;
+
+    size_t map_size = source_map.size();
+    file.write((char *)&map_size, sizeof(size_t));
 
     for(auto i = source_map.begin(); i != source_map.end(); ++i) {
         
@@ -19,8 +22,8 @@ void MapSerializer::map_serialize(const unordered_map<string, long long>& source
         int size = i->first.size();
         
         file.write((char *)&size, sizeof(int));
-        file.write(i->first.c_str(), i->first.size());
-        file.write((char *)&i->second, sizeof(long long));
+        file.write(i->first.c_str(), size);
+        file.write((char *)&i->second, sizeof(unsigned int));
 
         if(cnt % 100 == 0) {
             prog_bar.progress_increment(100);
@@ -30,42 +33,51 @@ void MapSerializer::map_serialize(const unordered_map<string, long long>& source
     prog_bar.progress_end();
 }
 
-void MapSerializer::map_deserialize(unordered_map<string, long long>& target_map, string path) {
+void MapSerializer::map_deserialize(unordered_map<string, unsigned int>& target_map, string path) {
     ifstream file(path, ios_base::binary);
-    ProgressBar prog_bar("Deserializing binary file to map:");
-    long long cnt = 0;
 
-    while(file) {
-        ++cnt;
+    size_t map_size;
+    file.read((char *)&map_size, sizeof(size_t));
+    ProgressBar prog_bar("Deserializing binary file to map:", map_size);
+
+    size_t i;
+
+    for(i = 0; i < map_size && file; ++i) {
         int size;
-        long long id;
+        unsigned int id;
         file.read((char *)&size, sizeof(int));
         char *tmp_str = new char[size];
         
         file.read((char *)tmp_str, size);
-        file.read((char *)&id, sizeof(long long));
+        file.read((char *)&id, sizeof(unsigned int));
 
         target_map[string(tmp_str, size)] = id;
         delete[] tmp_str;
 
-        if(cnt % 100 == 0) {
+        if(i % 100 == 0) {
             prog_bar.progress_increment(100);
         }
     }
     file.close();
     prog_bar.progress_end();
+    if(i != map_size) {
+        cerr << "map_deserialize: Something wrong in binary file reading. " << endl;
+    }
 }
 
-void MapSerializer::triple_serialize(vector<tuple<long long, long long, long long> >& triples, string path) {
-    ofstream file(path, ios_base::binary | ios_base::app);
+void MapSerializer::triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path) {
+    ofstream file(path, ios_base::binary);
     ProgressBar prog_bar("Serializing triples to binary file:", triples.size());
-    long long cnt = 0;
+    unsigned int cnt = 0;
+    
+    size_t vector_size = triples.size();
+    file.write((char *)&vector_size, sizeof(size_t));
 
     for(auto i = triples.begin(); i != triples.end(); ++i) {
 
         ++cnt;
-        long long tri_arr[3] = {get<0>(*i), get<1>(*i), get<2>(*i)};
-        file.write((char *)tri_arr, sizeof(long long) * 3);
+        unsigned int tri_arr[3] = {get<0>(*i), get<1>(*i), get<2>(*i)};
+        file.write((char *)tri_arr, sizeof(unsigned int) * 3);
 
         if (cnt % 100 == 0) {
             prog_bar.progress_increment(100);
@@ -75,15 +87,18 @@ void MapSerializer::triple_serialize(vector<tuple<long long, long long, long lon
     prog_bar.progress_end();
 }
 
-void MapSerializer::triple_deserialize(vector<tuple<long long, long long, long long> >& triples, string path) {
+void MapSerializer::triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path) {
     ifstream file(path, ios_base::binary);
-    ProgressBar prog_bar("Deserializing binary file to triples:");
-    long long cnt = 0;
 
-    while (file) {
-        ++cnt;
-        long long tri_arr[3];
-        file.read((char *)tri_arr, sizeof(long long) * 3);
+    size_t vector_size;
+    file.read((char *)&vector_size, sizeof(size_t));
+    ProgressBar prog_bar("Deserializing binary file to triples:", vector_size);
+    size_t cnt = 0;
+
+    for(cnt=0; cnt < vector_size && file; ++cnt) {
+
+        unsigned int tri_arr[3];
+        file.read((char *)tri_arr, sizeof(unsigned int) * 3);
         triples.push_back(make_tuple(tri_arr[0], tri_arr[1], tri_arr[2]));
 
         if (cnt % 100 == 0) {
@@ -92,4 +107,7 @@ void MapSerializer::triple_deserialize(vector<tuple<long long, long long, long l
     }
     file.close();
     prog_bar.progress_end();
+    if(cnt != vector_size) {
+        cerr << "triple_deserialize: Something wrong in binary file reading. " << endl;
+    }
 }
