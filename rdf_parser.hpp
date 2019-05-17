@@ -32,7 +32,7 @@ public:
     void parse(unsigned int lines=-1, bool save_file=false);
     void retrivial();
     void to_json(string);
-    void to_text(string);
+    void to_text(string, bool);
     void clear_data();
     unordered_map<string, unsigned int> entities;
     unordered_map<string, unsigned int> properties;

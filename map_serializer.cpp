@@ -102,13 +102,20 @@ void MapSerializer::map_compare(const unordered_map<string, unsigned int>& a, co
 {
     ofstream file(path + name + "_compare", ios::out);
 
-    auto iter_a = a.begin();
-    auto iter_b = b.begin();
+    
+    map <string, unsigned int> map_a(a.begin(), a.end());
+    map <string, unsigned int> map_b(b.begin(), b.end());
 
     file << "unordered_map " << name << "_a size : " << a.size() << endl;
     file << "unordered_map " << name << "_b size : " << b.size() << endl;
+    file << endl;
+    file << "map " << name << "_a size : " << map_a.size() << endl;
+    file << "map " << name << "_b size : " << map_b.size() << endl;
+    file << endl;
 
-    while(iter_a != a.end())
+    auto iter_a = map_a.begin();
+    auto iter_b = map_b.begin();
+    while(iter_a != map_a.end())
     {
         if (iter_a->first != iter_b->first || iter_a->second != iter_b->second)
         {
@@ -121,27 +128,58 @@ void MapSerializer::map_compare(const unordered_map<string, unsigned int>& a, co
         iter_b++;
         
     }
-    if (iter_b != b.end())
+    if (iter_b != map_b.end())
     {
-        file << "unordered_map " << name <<"_b is not itered to end.\n";
+        file << "map " << name <<"_b is not itered to end.\n";
     }
     file.close();
 
 }
 
-void MapSerializer::map_to_text(const unordered_map<string, unsigned int>& source_map, string path)
+void MapSerializer::triples_to_text(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path)
+{
+    ofstream file(path, ios::out);
+    ProgressBar prog_bar("Serializing triples vector to text file:", triples.size());
+    prog_bar.progress_begin();
+
+    for (auto i = triples.begin(); i != triples.end(); i++)
+    {
+        file << get<0>(*i) << "\t" << get<1>(*i) << "\t" << get<2>(*i) << endl;
+        prog_bar.progress += 1;
+    }
+    file.close();
+    prog_bar.progress_end();
+}
+
+void MapSerializer::map_to_text(const unordered_map<string, unsigned int>& source_map, string path, bool inmap)
 {
     ofstream file(path, ios::out);
     ProgressBar prog_bar("Serializing map to text file:", source_map.size());
-    auto iter = source_map.begin();
     prog_bar.progress_begin();
-
-    while(iter != source_map.end())
+    if (inmap)
     {
-        file << iter->first << "\t" << iter->second << endl;
-        iter++;
-        prog_bar.progress += 1;
+        map <string, unsigned int> ordered_map(source_map.begin(), source_map.end());
+        auto iter = ordered_map.begin();
+        while(iter != ordered_map.end())
+        {
+            file << iter->first << "\t" << iter->second << endl;
+            iter++;
+            prog_bar.progress += 1;
+        }
+
     }
+    else
+    {
+        auto iter = source_map.begin();
+    
+        while(iter != source_map.end())
+        {
+            file << iter->first << "\t" << iter->second << endl;
+            iter++;
+            prog_bar.progress += 1;
+        }
+    }
+    
     file.close();
     prog_bar.progress_end();
 }

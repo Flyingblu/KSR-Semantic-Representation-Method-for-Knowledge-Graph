@@ -145,10 +145,11 @@ void RDFParser::to_json(string path) {
     json_file.close();
 }
 
-void RDFParser::to_text(string path)
+void RDFParser::to_text(string path, bool inmap)
 {
-    MapSerializer::map_to_text(this->entities, path + "entities.text");
-    MapSerializer::map_to_text(this->properties, path + "properties.text");
+    MapSerializer::map_to_text(this->entities, path + "entities.text", inmap);
+    MapSerializer::map_to_text(this->properties, path + "properties.text", inmap);
+    MapSerializer::triples_to_text(this->triples, path + "triples.text");
 }
 
 void RDFParser::clear_data() {
