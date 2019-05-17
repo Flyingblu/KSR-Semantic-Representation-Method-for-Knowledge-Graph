@@ -8,25 +8,25 @@
 
 #include "progress_bar.hpp"
 
-void ProgressBar::progress_increment(long long progress) {
+void ProgressBar::progress_begin() {
+  this->prog_bar_td = new thread(&ProgressBar::detact_progress, this);
+}
 
-  if (this->ended) {
-    cerr << "ProgressBar: progress already ended! " << endl;
-    return;
-  }
-
+void ProgressBar::detact_progress() {
   string output = this->message + "\t";
-  this->progress += progress;
-  printf("%c[2K", 27);
-  cout << '\r';
-  if(this->graduation != -1) {
+  while(!this->ended) {
+    printf("%c[2K", 27);
+    cout << '\r';
+    if(this->graduation != -1) {
 
-    double percentage = double(this->progress) / double(this->graduation);
-    cout << setprecision(4) << output << percentage * 100 << '%' << '\r' << flush;
+      double percentage = double(this->progress) / double(this->graduation);
+      cout << setprecision(4) << output << percentage * 100 << '%' << '\r' << flush;
 
-  } else {
+    } else {
 
-    cout << output << this->progress << '\r' << flush;
+      cout << output << this->progress << '\r' << flush;
+    }
+    this_thread::sleep_for(chrono::milliseconds(50));
   }
 }
 
@@ -39,6 +39,7 @@ void ProgressBar::progress_end() {
   }
 
   this->ended = true;
+  this->prog_bar_td->join();
   cout << endl;
 
   auto end_time = std::chrono::system_clock::now();

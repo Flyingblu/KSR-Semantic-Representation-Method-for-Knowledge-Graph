@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <thread>
 
 using namespace std;
 
@@ -25,14 +26,21 @@ class ProgressBar {
       start_time(chrono::system_clock::now()) {
         cout << endl;
       } ;
+      ~ProgressBar() {
+        delete this->prog_bar_td;
+      }
     void progress_increment(long long progress = 1);
+    void progress_begin();
     void progress_end();
+    long long progress = 0;
+    
   private:
     string message;
     long long graduation;
-    long long progress = 0;
     bool ended = false;
-     std::chrono::time_point<std::chrono::system_clock> start_time;
+    std::chrono::time_point<std::chrono::system_clock> start_time;
+    thread* prog_bar_td;
+    void detact_progress();
 };
 
 #endif /* progress_bar_hpp */

@@ -102,32 +102,27 @@ void RDFParser::triple_parser(string& triple) {
 void RDFParser::parse(unsigned int lines, bool save_file) {
 
     string line;
-    ProgressBar prog_bar("Triples parsed:");
-    unsigned int cnt_lines;
 
     if(lines == -1) {
         // lines is -1 means parsing the entire file
-        cnt_lines = 0;
+        ProgressBar prog_bar("Triples parsed:");
+        prog_bar.progress_begin();
         while(getline(*(this->rdf_file), line)) {
 
-            ++cnt_lines;
             this->triple_parser(line);
 
-            if(cnt_lines % 100 == 0) {
-                prog_bar.progress_increment(100);
-            }
+            prog_bar.progress += 1;
         }
+        prog_bar.progress_end();
     } else {
         // When lines is not -1 it means parsing that many lines
-        //Here cnt_lines starts counting at 1 to make the progress bar behave normally
-        for(cnt_lines = 1;getline(*(this->rdf_file), line) && cnt_lines <= lines; ++cnt_lines) {
+        ProgressBar prog_bar("Triples parsed:", lines);
+        prog_bar.progress_begin();
+        for(prog_bar.progress = 0;getline(*(this->rdf_file), line) && prog_bar.progress < lines; ++prog_bar.progress) {
 
             this->triple_parser(line);
-
-            if(cnt_lines % 100 == 0) {
-                prog_bar.progress_increment(100);
-            }
         }
+        prog_bar.progress_end();
     }
 
     if(save_file) {
@@ -135,8 +130,6 @@ void RDFParser::parse(unsigned int lines, bool save_file) {
             MapSerializer::map_serialize(this->properties, this->save_path + "properties.data");
             MapSerializer::triple_serialize(this->triples, this->save_path + "triples.data");
     }
-
-    prog_bar.progress_end();
 }
 
 void RDFParser::to_json(string path) {
