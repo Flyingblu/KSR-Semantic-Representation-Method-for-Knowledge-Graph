@@ -23,9 +23,7 @@ class ProgressBar {
     ProgressBar(string prompt_message, long long graduation = -1):
       message(prompt_message), 
       graduation(graduation), 
-      start_time(chrono::system_clock::now()) {
-        cout << endl;
-      } ;
+      start_time(chrono::system_clock::now()) {} ;
       ~ProgressBar() {
         delete this->prog_bar_td;
       }

@@ -9,6 +9,7 @@
 #include "progress_bar.hpp"
 
 void ProgressBar::progress_begin() {
+  cout << endl;
   this->prog_bar_td = new thread(&ProgressBar::detect_progress, this);
 }
 

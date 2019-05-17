@@ -158,6 +158,8 @@ void MapSerializer::map_to_text(const unordered_map<string, unsigned int>& sourc
     prog_bar.progress_begin();
     if (inmap)
     {
+        printf("%c[2K", 27);
+        cout << "Adding unordered_map into map" <<endl << flush;
         map <string, unsigned int> ordered_map(source_map.begin(), source_map.end());
         auto iter = ordered_map.begin();
         while(iter != ordered_map.end())
