@@ -9,12 +9,12 @@
 #include "progress_bar.hpp"
 
 void ProgressBar::progress_begin() {
-  this->prog_bar_td = new thread(&ProgressBar::detact_progress, this);
+  this->prog_bar_td = new thread(&ProgressBar::detect_progress, this);
 }
 
-void ProgressBar::detact_progress() {
+void ProgressBar::detect_progress() {
   string output = this->message + "\t";
-  while(!this->ended) {
+  auto detect = [&]() -> void {
     printf("%c[2K", 27);
     cout << '\r';
     if(this->graduation != -1) {
@@ -26,8 +26,14 @@ void ProgressBar::detact_progress() {
 
       cout << output << this->progress << '\r' << flush;
     }
+  };
+  
+  while(!this->ended) {
+    detect();
     this_thread::sleep_for(chrono::milliseconds(50));
   }
+  detect();
+  
 }
 
 void ProgressBar::progress_end() {

@@ -40,7 +40,7 @@ class ProgressBar {
     bool ended = false;
     std::chrono::time_point<std::chrono::system_clock> start_time;
     thread* prog_bar_td;
-    void detact_progress();
+    void detect_progress();
 };
 
 #endif /* progress_bar_hpp */
