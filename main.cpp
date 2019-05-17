@@ -21,7 +21,7 @@ int main(int argc, const char * argv[]) {
     rdf.to_text("/DIRECTORY/PATH/OF/TARGET_FILE/rdf_", true);
     rdf.clear_data();
     rdf.retrivial();
-    rdf.to_text("/DIRECTORY/PATH/OF/TARGET_FILE/rdf_1", true);
+    rdf.to_text("/DIRECTORY/PATH/OF/TARGET_FILE/rdf_1_", true);
     //MapSerializer::map_compare(rdf.entities, rdf_1.entities,"/DIRECTORY/PATH/OF/TARGET_FILE/" ,"entities");
     //MapSerializer::map_compare(rdf.properties, rdf_1.properties, "/DIRECTORY/PATH/OF/TARGET_FILE/", "properties");
     //rdf.to_json("/PATH/TO/JSON_FILE.json");
