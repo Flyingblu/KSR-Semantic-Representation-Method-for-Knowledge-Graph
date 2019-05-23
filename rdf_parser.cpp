@@ -33,7 +33,7 @@ void RDFParser::triple_parser(string& triple) {
         if (!has_string) {
             size_t p_pos = tmp.find(universal_pattern);
             if (p_pos != string::npos) {
-                tmp.replace(p_pos, universal_pattern.size, "~");
+                tmp.replace(p_pos, universal_pattern.size(), "~");
             }
         }
         switch (state)
