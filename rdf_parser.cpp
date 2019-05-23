@@ -26,8 +26,16 @@ void RDFParser::triple_parser(string& triple) {
     int state = 0;
     int f_state = 0;
     unsigned int triple_arr[3];
+    string universal_pattern = "http://rdf.freebase.com/ns";
+    bool has_string = false;
     auto add_to_map = [&](string::iterator start, string::iterator end) -> void {
         string tmp(start, end);
+        if (!has_string) {
+            size_t p_pos = tmp.find(universal_pattern);
+            if (p_pos != string::npos) {
+                tmp.replace(p_pos, universal_pattern.size, "~");
+            }
+        }
         switch (state)
         {
         case 0:
@@ -81,6 +89,8 @@ void RDFParser::triple_parser(string& triple) {
 
             }
         } else if (f_state == 2) {
+
+            has_string = true;
 
             if (*i == '"') {
 
