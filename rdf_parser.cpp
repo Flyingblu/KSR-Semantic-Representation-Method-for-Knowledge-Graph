@@ -109,31 +109,30 @@ void RDFParser::triple_parser(string& triple) {
     }
 }
 
-void RDFParser::parse(unsigned int lines, bool save_file) {
+void RDFParser::parse(long long lines, bool save_file, string log_path) {
 
     string line;
 
+    ProgressBar prog_bar("Triples parsed:", lines, log_path);
+    prog_bar.progress_begin();
+
     if(lines == -1) {
         // lines is -1 means parsing the entire file
-        ProgressBar prog_bar("Triples parsed:");
-        prog_bar.progress_begin();
+        
         while(getline(*(this->rdf_file), line)) {
 
             this->triple_parser(line);
 
             prog_bar.progress += 1;
         }
-        prog_bar.progress_end();
     } else {
         // When lines is not -1 it means parsing that many lines
-        ProgressBar prog_bar("Triples parsed:", lines);
-        prog_bar.progress_begin();
         for(prog_bar.progress = 0;getline(*(this->rdf_file), line) && prog_bar.progress < lines; ++prog_bar.progress) {
 
             this->triple_parser(line);
         }
-        prog_bar.progress_end();
     }
+    prog_bar.progress_end();
 
     if(save_file) {
             MapSerializer::map_serialize(this->entities, this->save_path + "entities.data");

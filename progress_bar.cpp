@@ -15,6 +15,18 @@ void ProgressBar::progress_begin() {
 
 void ProgressBar::detect_progress() {
   string output = this->message + "\t";
+  int cnt = 0;
+  bool save = (this->save_path != "");
+  ofstream parse_speed_log(this->save_path + "parse_speed.log");
+  ofstream memory_log(this->save_path + "memory_usage.log");
+  ofstream read_speed_log(this->save_path + "read_speed.log");
+  string pid = to_string(getpid());
+  string proc_mem_path = "/proc/" + pid + "/statm";
+  string proc_read_path = "/proc/" + pid + "/io";
+  string tmp;
+
+  cout << pid << endl;
+
   auto detect = [&]() -> void {
     printf("%c[2K", 27);
     cout << '\r';
@@ -32,9 +44,27 @@ void ProgressBar::detect_progress() {
   while(!this->ended) {
     detect();
     this_thread::sleep_for(chrono::milliseconds(50));
+    cnt += 1;
+    if(save && cnt % 20 == 0) {
+      parse_speed_log << this->progress << endl;
+
+      ifstream proc_mem(proc_mem_path);
+      getline(proc_mem, tmp);
+      proc_mem.close();
+      memory_log << tmp << endl;
+
+      ifstream proc_read(proc_read_path);
+      getline(proc_read, tmp);
+      proc_read.close();
+      read_speed_log << tmp << endl;
+
+      cnt = 0;
+    }
   }
   detect();
-  
+  parse_speed_log.close();
+  memory_log.close();
+  read_speed_log.close();
 }
 
 void ProgressBar::progress_end() {

@@ -9,7 +9,10 @@
 #ifndef progress_bar_hpp
 #define progress_bar_hpp
 
+#include <sys/types.h>
+#include <unistd.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <iomanip>
 #include <chrono>
@@ -20,20 +23,21 @@ using namespace std;
 
 class ProgressBar {
   public:
-    ProgressBar(string prompt_message, long long graduation = -1):
+    ProgressBar(string prompt_message, long long graduation = -1, string save_path = ""):
       message(prompt_message), 
       graduation(graduation), 
+      save_path(save_path), 
       start_time(chrono::system_clock::now()) {} ;
       ~ProgressBar() {
         delete this->prog_bar_td;
       }
-    void progress_increment(long long progress = 1);
     void progress_begin();
     void progress_end();
     long long progress = 0;
     
   private:
     string message;
+    string save_path;
     long long graduation;
     bool ended = false;
     std::chrono::time_point<std::chrono::system_clock> start_time;

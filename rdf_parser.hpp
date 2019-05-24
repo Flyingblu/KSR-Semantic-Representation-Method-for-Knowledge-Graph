@@ -29,7 +29,7 @@ public:
         delete this->rdf_file;
     }
     
-    void parse(unsigned int lines=-1, bool save_file=false);
+    void parse(long long lines=-1, bool save_file=false, string log_path = "");
     void retrivial();
     void to_json(string);
     void to_text(string, bool);
