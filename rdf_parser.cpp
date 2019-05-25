@@ -28,7 +28,7 @@ void RDFParser::triple_parser(string& triple) {
     unsigned int triple_arr[3];
     string universal_pattern = "http://rdf.freebase.com/ns";
     bool has_string = false;
-    auto add_to_map = [&](string::iterator start, string::iterator end) -> void {
+    auto add_to_map = [&](string::iterator& start, string::iterator& end) -> void {
         string tmp(start, end);
         if (!has_string) {
             size_t p_pos = tmp.find(universal_pattern);
