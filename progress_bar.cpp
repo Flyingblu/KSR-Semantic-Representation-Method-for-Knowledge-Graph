@@ -20,12 +20,13 @@ void ProgressBar::detect_progress() {
   ofstream parse_speed_log(this->save_path + "parse_speed.log");
   ofstream memory_log(this->save_path + "memory_usage.log");
   ofstream read_speed_log(this->save_path + "read_speed.log");
+  ofstream cpu_log(this->save_path + "cpu.log");
+  cpu_log << sysconf(_SC_CLK_TCK) << endl;
   string pid = to_string(getpid());
   string proc_mem_path = "/proc/" + pid + "/statm";
   string proc_read_path = "/proc/" + pid + "/io";
+  string proc_cpu_path = "/proc/" + pid + "/stat";
   string tmp;
-
-  cout << pid << endl;
 
   auto detect = [&]() -> void {
     printf("%c[2K", 27);
@@ -58,6 +59,14 @@ void ProgressBar::detect_progress() {
       proc_read.close();
       read_speed_log << tmp << endl;
 
+      ifstream proc_cpu(proc_cpu_path);
+      getline(proc_cpu, tmp);
+      proc_cpu.close();
+      cpu_log << tmp << endl;
+      ifstream uptime("/proc/uptime");
+      getline(uptime, tmp);
+      cpu_log << tmp << endl;
+
       cnt = 0;
     }
   }
@@ -65,6 +74,7 @@ void ProgressBar::detect_progress() {
   parse_speed_log.close();
   memory_log.close();
   read_speed_log.close();
+  cpu_log.close();
 }
 
 void ProgressBar::progress_end() {
