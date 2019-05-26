@@ -109,9 +109,17 @@ void RDFParser::triple_parser(string& triple) {
     }
 }
 
-void RDFParser::parse(long long lines, bool save_file, string log_path) {
+void RDFParser::parse(long long lines, bool save_file) {
 
     string line;
+
+    string log_path;
+    if(this->log_path == "") {
+        log_path = "";
+    } else {
+        log_path = this->log_path + "parse_log/";
+        mkdir(log_path.c_str(), S_IRWXU);
+    }
 
     ProgressBar prog_bar("Triples parsed:", lines, log_path);
     prog_bar.progress_begin();
@@ -168,7 +176,15 @@ void RDFParser::clear_data() {
 }
 
 void RDFParser::retrivial() {
-    MapSerializer::map_deserialize(this->entities, this->save_path + "entities.data");
-    MapSerializer::map_deserialize(this->properties, this->save_path + "properties.data");
-    MapSerializer::triple_deserialize(this->triples, this->save_path + "triples.data");
+    if (this->log_path == "") {
+        MapSerializer::map_deserialize(this->entities, this->save_path + "entities.data");
+        MapSerializer::map_deserialize(this->properties, this->save_path + "properties.data");
+        MapSerializer::triple_deserialize(this->triples, this->save_path + "triples.data");
+    } else {
+        string log_path = this->log_path + "deserialize_log/";
+        mkdir(log_path.c_str(), S_IRWXU);
+        MapSerializer::map_deserialize(this->entities, this->save_path + "entities.data", log_path + "entities_");
+        MapSerializer::map_deserialize(this->properties, this->save_path + "properties.data", log_path + "properties_");
+        MapSerializer::triple_deserialize(this->triples, this->save_path + "triples.data", log_path + "triples_");
+    }
 }

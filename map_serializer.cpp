@@ -8,9 +8,9 @@
 
 #include "map_serializer.hpp"
 
-void MapSerializer::map_serialize(const unordered_map<string, unsigned int>& source_map, string path) {
+void MapSerializer::map_serialize(const unordered_map<string, unsigned int>& source_map, string path, string log_path) {
     ofstream file(path, ios_base::binary);
-    ProgressBar prog_bar("Serializing map to binary file:", source_map.size());
+    ProgressBar prog_bar("Serializing map to binary file:", source_map.size(), log_path);
     prog_bar.progress_begin();
 
     size_t map_size = source_map.size();
@@ -30,12 +30,12 @@ void MapSerializer::map_serialize(const unordered_map<string, unsigned int>& sou
     prog_bar.progress_end();
 }
 
-void MapSerializer::map_deserialize(unordered_map<string, unsigned int>& target_map, string path) {
+void MapSerializer::map_deserialize(unordered_map<string, unsigned int>& target_map, string path, string log_path) {
     ifstream file(path, ios_base::binary);
 
     size_t map_size;
     file.read((char *)&map_size, sizeof(size_t));
-    ProgressBar prog_bar("Deserializing binary file to map:", map_size);
+    ProgressBar prog_bar("Deserializing binary file to map:", map_size, log_path);
     prog_bar.progress_begin();
 
     for(prog_bar.progress = 0; prog_bar.progress < map_size && file; ++prog_bar.progress) {
@@ -57,9 +57,9 @@ void MapSerializer::map_deserialize(unordered_map<string, unsigned int>& target_
     }
 }
 
-void MapSerializer::triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path) {
+void MapSerializer::triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path, string log_path) {
     ofstream file(path, ios_base::binary);
-    ProgressBar prog_bar("Serializing triples to binary file:", triples.size());
+    ProgressBar prog_bar("Serializing triples to binary file:", triples.size(), log_path);
     prog_bar.progress_begin();
     
     size_t vector_size = triples.size();
@@ -76,12 +76,12 @@ void MapSerializer::triple_serialize(vector<tuple<unsigned int, unsigned int, un
     prog_bar.progress_end();
 }
 
-void MapSerializer::triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path) {
+void MapSerializer::triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >& triples, string path, string log_path) {
     ifstream file(path, ios_base::binary);
 
     size_t vector_size;
     file.read((char *)&vector_size, sizeof(size_t));
-    ProgressBar prog_bar("Deserializing binary file to triples:", vector_size);
+    ProgressBar prog_bar("Deserializing binary file to triples:", vector_size, log_path);
     prog_bar.progress_begin();
 
     for(prog_bar.progress = 0; prog_bar.progress < vector_size && file; ++prog_bar.progress) {

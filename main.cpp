@@ -16,7 +16,7 @@
 using namespace std;
 
 int main(int argc, const char * argv[]) {
-    RDFParser rdf("/PATH/TO/RDF_FILE", "/DIRECTORY/PATH/OF/TARGET_FILE/");
+    RDFParser rdf("/PATH/TO/RDF_FILE", "/DIRECTORY/PATH/OF/TARGET_FILE/", "/DIRECTORY/PATH/OF/LOG_FILE/");
     rdf.parse(-1, true);
     rdf.to_text("/DIRECTORY/PATH/OF/TARGET_FILE/rdf_", true);
     rdf.clear_data();

@@ -21,10 +21,10 @@
 using namespace std;
 
 namespace MapSerializer {
-    void map_serialize(const unordered_map<string, unsigned int>&, string);
-    void map_deserialize(unordered_map<string, unsigned int>&, string);
-    void triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string);
-    void triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string);
+    void map_serialize(const unordered_map<string, unsigned int>&, string, string log_dir = "");
+    void map_deserialize(unordered_map<string, unsigned int>&, string, string log_dir = "");
+    void triple_serialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string, string log_dir = "");
+    void triple_deserialize(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string, string log_dir = "");
     void map_compare(const unordered_map<string, unsigned int>& , const unordered_map<string, unsigned int>&, string, string);
     void map_to_text(const unordered_map<string, unsigned int>& source_map, string path, bool inmap);
     void triples_to_text(vector<tuple<unsigned int, unsigned int, unsigned int> >&, string);

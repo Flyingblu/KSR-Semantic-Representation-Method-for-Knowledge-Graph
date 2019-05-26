@@ -7,3 +7,5 @@ rdf_parser
 .DS_Store
 
 main\.cpp\.local
+
+test\.cpp
