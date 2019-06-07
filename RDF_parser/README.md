@@ -1,5 +1,7 @@
 # RDF_parser
 
+This program works as an data preprocesser. It parse RDF files, which contain triples, into three binary files. First is entities.data which contains entities and their corresponding ids. Scond is properties.data, which contains properties and their corresponding ids. Third is triples.data, which contains triples represented by ids of entities and properties. 
+
 ## File composition
 `main.cpp`: It is a sample program to use this library. <br>
 `rdf_parser.cpp`: This file defines api of the RDF parser. <br>
