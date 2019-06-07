@@ -78,7 +78,7 @@ void cluster::logging()
         }
         ++display;
     }
-    writer << " total : " << total;
+    writer << "total : " << total;
     writer.close();
 }
 
