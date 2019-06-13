@@ -15,6 +15,8 @@ void cluster::clusterizing()
         {
             unsigned int tri_arr[3];
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
+            ++cunt_entities[tri_arr[0]];
+            ++cunt_entities[tri_arr[2]];
             join(tri_arr[0], tri_arr[2]);
             ++display;
         }
@@ -42,7 +44,7 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    else if (cunt[fidl] > 42290058 || cunt[fidr] > 42290058)
+    else if (cunt[fidl] >= 42290058 || cunt[fidr] >= 42290058)
         return;
     else if (cunt[fidl] > cunt[fidr])
         {
