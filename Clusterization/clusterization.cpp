@@ -67,7 +67,7 @@ void cluster::logging()
 {
     cout << "logging ... " << endl;
     ofstream writer(save_path + "_log"); // log cluster 
-    //ofstream writer_1(save_path + "_connect");
+    ofstream writer_1(save_path + "_cunt_e");
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
@@ -79,13 +79,14 @@ void cluster::logging()
         {
             count++;
             writer << count << "th cluster :  id : " << i << "\t" << "num_line :" << cunt[i] << endl;
+            writer_1 << count << "th cluster : id : " << i << "\t" << "cunt_enties appear : " << cunt_entities[i] << endl;
             total += cunt[i];
         }
         ++display;
     }
     writer << "total : " << total;
     writer.close();
-   // writer_1.close();
+    writer_1.close();
 }
 
 /*
