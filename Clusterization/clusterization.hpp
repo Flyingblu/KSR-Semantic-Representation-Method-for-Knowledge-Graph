@@ -11,8 +11,7 @@ class cluster
     public:
         cluster(string read_path, string save_path, unsigned int reserve_num): 
                 reader(new ifstream(read_path, ios::binary)), 
-                save_path(save_path), cunt(reserve_num, 1), 
-                connect(reserve_num, vector<unsigned int>(reserve_num, 0)){
+                save_path(save_path), cunt(reserve_num, 1){
 
             cout << "Initializing ... " << endl;
             us.resize(reserve_num);
@@ -28,7 +27,7 @@ class cluster
         };
         void clusterizing();    
         void logging();
-        void logging_small_cluster(unsigned int);
+        //void logging_small_cluster(unsigned int);
         vector<unsigned int> getunionset();
         vector<unsigned int> getuscount();
         
@@ -37,7 +36,6 @@ class cluster
         ifstream* reader;
         vector<unsigned int> us;
         vector<unsigned int> cunt;
-        vector<vector<unsigned int>> connect;
         string save_path; 
         unsigned int find(unsigned int id);
         void join(unsigned int idl, unsigned int idr);

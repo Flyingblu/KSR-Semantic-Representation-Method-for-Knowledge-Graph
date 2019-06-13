@@ -43,6 +43,8 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
+    else if (cunt[fidl] > 42,290,058 || cunt[fidr] > 42,290,058)
+        return
     else if (cunt[fidl] > cunt[fidr])
         {
             us[fidr] = fidl;
@@ -81,23 +83,9 @@ void cluster::logging()
         }
         ++display;
     }
-    for (int i = 0; i < vector_size; ++i)
-    {
-        if (find(i) == 31)
-        {
-            for (int j = 0; j < vector_size; ++j)
-            {
-                if(vis[i][j])
-                {
-                    continue;
-                }
-                writer_1 << "connect[" << i << "][" << j << "] : " << connect[i][j] << endl;
-                vis[i][j] = true;
-            }
-        }
-    }
     writer << "total : " << total;
     writer.close();
+    writer_1.close();
 }
 
 /*
