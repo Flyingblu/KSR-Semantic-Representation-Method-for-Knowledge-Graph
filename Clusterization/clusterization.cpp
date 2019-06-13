@@ -15,6 +15,7 @@ void cluster::clusterizing()
         {
             unsigned int tri_arr[3];
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
+            ++connect[tri_arr[0]][tri_arr[2]];
             join(tri_arr[0], tri_arr[2]);
             ++display;
         }
@@ -62,13 +63,15 @@ void cluster::join(unsigned int idl, unsigned int idr)
 void cluster::logging()
 {
     cout << "logging ... " << endl;
-    ofstream writer(save_path);
+    ofstream writer(save_path + "_log"); // log cluster 
+    ofstream writer_1(save_path + "_connect");
     size_t vector_size = us.size(); 
+    vector<vector<bool>> vis(vector_size, vector<bool>(vector_size, false));
     unsigned int count = 0;
     unsigned int total = 0;
     boost::progress_display display(vector_size);
     
-    for (int i = 0; i < vector_size; i++)
+    for (int i = 0; i < vector_size; ++i)
     {
         if (find(i) == i)
         {
@@ -78,11 +81,39 @@ void cluster::logging()
         }
         ++display;
     }
+    for (int i = 0; i < vector_size; ++i)
+    {
+        if (find(i) == 31)
+        {
+            for (int j = 0; j < vector_size; ++j)
+            {
+                if(vis[i][j])
+                {
+                    continue;
+                }
+                writer_1 << "connect[" << i << "][" << j << "] : " << connect[i][j] << endl;
+                vis[i][j] = true;
+            }
+        }
+    }
     writer << " total : " << total;
     writer.close();
 }
 
-
+/*
+void cluster::logging_small_cluster(unsigned int cluster_id)
+{
+    ofstream writer(save_path + "_s"); // small cluster
+    size_t vector_size = us.size();
+    for(int i = 0; i < vector_size; ++i)
+    {
+        if (find(i) != cluster_id)
+        {
+            writer << 
+        }
+    }
+}
+*/
 vector<unsigned int> cluster::getunionset()
 {
     return us;
