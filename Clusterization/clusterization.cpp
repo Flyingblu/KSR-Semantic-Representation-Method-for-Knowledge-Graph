@@ -81,22 +81,7 @@ void cluster::logging()
         }
         ++display;
     }
-    for (int i = 0; i < vector_size; ++i)
-    {
-        if (find(i) == 31)
-        {
-            for (int j = 0; j < vector_size; ++j)
-            {
-                if(vis[i][j])
-                {
-                    continue;
-                }
-                writer_1 << "connect[" << i << "][" << j << "] : " << connect[i][j] << endl;
-                vis[i][j] = true;
-            }
-        }
-    }
-    writer << " total : " << total;
+    writer << "total : " << total;
     writer.close();
 }
 
