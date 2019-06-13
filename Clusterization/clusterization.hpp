@@ -38,7 +38,7 @@ class cluster
         ifstream* reader;
         vector<unsigned int> us;
         vector<unsigned int> cunt;
-        vector<unsinged int> cunt_entities;
+        vector<unsigned int> cunt_entities;
         string save_path; 
         unsigned int find(unsigned int id);
         void join(unsigned int idl, unsigned int idr);
