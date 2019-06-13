@@ -65,9 +65,8 @@ void cluster::logging()
 {
     cout << "logging ... " << endl;
     ofstream writer(save_path + "_log"); // log cluster 
-    ofstream writer_1(save_path + "_connect");
+    //ofstream writer_1(save_path + "_connect");
     size_t vector_size = us.size(); 
-    vector<vector<bool>> vis(vector_size, vector<bool>(vector_size, false));
     unsigned int count = 0;
     unsigned int total = 0;
     boost::progress_display display(vector_size);
@@ -84,7 +83,7 @@ void cluster::logging()
     }
     writer << "total : " << total;
     writer.close();
-    writer_1.close();
+   // writer_1.close();
 }
 
 /*
