@@ -3,6 +3,8 @@ json\.h
 
 \.vscode/
 
+\.vs/
+
 rdf_parser
 .DS_Store
 

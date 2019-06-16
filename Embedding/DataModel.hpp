@@ -11,9 +11,7 @@ public:
 public:
 	vector<pair<pair<int, int>, int> >	data_train;
 	vector<pair<pair<int, int>, int> >	data_dev_true;
-	vector<pair<pair<int, int>, int> >	data_dev_false;
 	vector<pair<pair<int, int>, int> >	data_test_true;
-	vector<pair<pair<int, int>, int> >	data_test_false;
 
 public:
 	set<int>			set_tail;
@@ -49,9 +47,6 @@ public:
 	map<int, map<int, vector<int> > >     rel_heads;
 	map<int, map<int, vector<int> > >     rel_tails;
 	map<pair<int, int>, int>		     rel_finder;
-	
-public:
-	int zeroshot_pointer;
 
 public:
 	DataModel(const Dataset& dataset)
@@ -82,9 +77,7 @@ public:
 			relation_hpt[i] = total / sum;
 		}
 
-		zeroshot_pointer = set_entity.size();
-		load_testing(dataset.base_dir + dataset.developing, data_dev_true, data_dev_false, dataset.self_false_sampling);
-		load_testing(dataset.base_dir + dataset.testing, data_test_true, data_test_false, dataset.self_false_sampling);
+		load_testing(dataset.base_dir + dataset.testing, data_test_true, dataset.self_false_sampling);
 		
 		set_relation_head.resize(set_entity.size());
 		set_relation_tail.resize(set_relation.size());
@@ -169,10 +162,7 @@ public:
 			relation_hpt[i] = total / sum;
 		}
 
-		zeroshot_pointer = set_entity.size();
-		load_testing(dataset.base_dir + dataset.developing, data_dev_true, data_dev_false, dataset.self_false_sampling);
-		load_testing(dataset.base_dir + dataset.testing, data_dev_true, data_dev_false, dataset.self_false_sampling);
-		load_testing(file_zero_shot, data_test_true, data_test_false, dataset.self_false_sampling);
+		load_testing(file_zero_shot, data_test_true, dataset.self_false_sampling);
 
 		set_relation_head.resize(set_entity.size());
 		set_relation_tail.resize(set_relation.size());
@@ -281,7 +271,6 @@ public:
 	void load_testing(	
 		const string& filename, 
 		vector<pair<pair<int, int>,int>>& vin_true,
-		vector<pair<pair<int, int>,int>>& vin_false,
 		bool self_sampling = false)
 	{
 		fstream fin(filename.c_str());
@@ -319,9 +308,6 @@ public:
 
 				if (flag_true == 1)
 					vin_true.push_back(make_pair(make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-					relation_name_to_id[relation]));
-				else
-					vin_false.push_back(make_pair(make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
 					relation_name_to_id[relation]));
 
 				check_data_all.insert(make_pair(make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
