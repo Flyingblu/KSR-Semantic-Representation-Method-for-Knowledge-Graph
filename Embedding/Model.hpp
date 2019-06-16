@@ -91,6 +91,12 @@ public:
 	}
 
 public:
+
+	double		best_link_mean;
+	double		best_link_hitatten;
+	double		best_link_fmean;
+	double		best_link_fhitatten;
+
 	void test_link_prediction(int hit_rank = 10, const int part = 0)
 	{
 		double mean = 0;
