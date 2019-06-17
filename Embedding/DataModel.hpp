@@ -5,30 +5,19 @@
 class DataModel
 {
 public:
-	set<pair<pair<int, int>, int> >		check_data_train;
-	set<pair<pair<int, int>, int> >		check_data_all;
+	set<pair<pair<unsigned int, unsigned int>, unsigned int> >		check_data_train;
+	set<pair<pair<unsigned int, unsigned int>, unsigned int> >		check_data_all;
 
 public:
-	vector<pair<pair<int, int>, int> >	data_train;
-	vector<pair<pair<int, int>, int> >	data_test_true;
+	vector<pair<pair<unsigned int, unsigned int>, unsigned int> >	data_train;
+	vector<pair<pair<unsigned int, unsigned int>, unsigned int> >	data_test_true;
 
 public:
-	// TODO: `set_entity` is only used by its size, change it to something more compact, like: set<unsigned long>
-	set<string>			set_entity;
-	// `set_relation` is the same
-	set<string>			set_relation;
+	set<unsigned int>			set_entity;
+	set<unsigned int>			set_relation;
 
 public:
-	// TODO: `relation_type` can only be a value from 1 to 4. Change type int with char
-	vector<int>	relation_type;
-
-public:
-	// TODO: these two are unused in the training process, they can be deleted. They are used when retriving the names of entities and relations. 
-	vector<string>		entity_id_to_name;
-	vector<string>		relation_id_to_name;
-	// TODO: these two are used to find id by name, they can be optimized because we already assigned each object an id. But code need to be changed. 
-	map<string, int>	entity_name_to_id;
-	map<string, int>	relation_name_to_id;
+	vector<char>	relation_type;
 
 public:
 	vector<double>		relation_tph;
@@ -92,101 +81,69 @@ public:
 		}
 	}
 
-	void load_training(const string& filename,
-	  map<int, map<int, vector<int> > >& rel_heads,
-	  map<int, map<int, vector<int> > >& rel_tails)
+	void load_training(const string& file_path,
+		map<int, map<int, vector<int> > >& rel_heads,
+		map<int, map<int, vector<int> > >& rel_tails)
 	{
-		fstream fin(filename.c_str());
-		while(!fin.eof())
-		{
-			string head, tail, relation;
-			fin>>head>>relation>>tail;
+		ifstream triple_file(file_path, ios_base::binary);
 
-			if (entity_name_to_id.find(head) == entity_name_to_id.end())
-			{
-				entity_name_to_id.insert(make_pair(head, entity_name_to_id.size()));
-				entity_id_to_name.push_back(head);
-			}
+		size_t triple_size;
+		triple_file.read((char*)& triple_size, sizeof(size_t));
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, log_path);
+		prog_bar.progress_begin();
 
-			if (entity_name_to_id.find(tail) == entity_name_to_id.end())
-			{
-				entity_name_to_id.insert(make_pair(tail, entity_name_to_id.size()));
-				entity_id_to_name.push_back(tail);
-			}
+		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
 
-			if (relation_name_to_id.find(relation) == relation_name_to_id.end())
-			{
-				relation_name_to_id.insert(make_pair(relation, relation_name_to_id.size()));
-				relation_id_to_name.push_back(relation);
-			}
+			unsigned int tri_arr[3];
+			triple_file.read((char*)tri_arr, sizeof(unsigned int) * 3);
 
-			data_train.push_back(make_pair(
-				make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-				relation_name_to_id[relation]));
+			data_train.push_back(make_pair(make_pair(tri_arr[0], tri_arr[2]),tri_arr[1]));
+			check_data_train.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
+			check_data_all.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
 
-			check_data_train.insert(make_pair(
-				make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-				relation_name_to_id[relation]));
-			check_data_all.insert(make_pair(
-				make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-				relation_name_to_id[relation]));
+			set_entity.insert(tri_arr[0]);
+			set_entity.insert(tri_arr[2]);
+			set_relation.insert(tri_arr[1]);
 
-			set_entity.insert(head);
-			set_entity.insert(tail);
-			set_relation.insert(relation);
-
-			rel_heads[relation_name_to_id[relation]][entity_name_to_id[head]]
-				.push_back(entity_name_to_id[tail]);
-			rel_tails[relation_name_to_id[relation]][entity_name_to_id[tail]]
-				.push_back(entity_name_to_id[head]);
+			rel_heads[tri_arr[1]][tri_arr[0]].push_back(tri_arr[2]);
+			rel_tails[tri_arr[1]][tri_arr[2]].push_back(tri_arr[0]);
 		}
+		triple_file.close();
+		prog_bar.progress_end();
 
-		fin.close();
+		if (prog_bar.progress != triple_size) {
+			cerr << "triple_deserialize: Something wrong in binary file reading. " << endl;
+		}
 	}
 
-	void load_testing(	
-		const string& filename, 
-		vector<pair<pair<int, int>,int>>& vin_true)
+	void load_testing (const string& file_path,
+		vector<pair<pair<int, int>, int>>& vin_true)
 	{
-		fstream fin(filename.c_str());
-		while(!fin.eof())
-		{
-			string head, tail, relation;
-			int flag_true;
+		ifstream triple_file(file_path, ios_base::binary);
 
-			fin>>head>>relation>>tail;
-			fin>>flag_true;
+		size_t triple_size;
+		triple_file.read((char*)& triple_size, sizeof(size_t));
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, log_path);
+		prog_bar.progress_begin();
 
-			if (entity_name_to_id.find(head) == entity_name_to_id.end())
-			{
-				entity_name_to_id.insert(make_pair(head, entity_name_to_id.size()));
-				entity_id_to_name.push_back(head);
-			}
+		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
 
-			if (entity_name_to_id.find(tail) == entity_name_to_id.end())
-			{
-				entity_name_to_id.insert(make_pair(tail, entity_name_to_id.size()));
-				entity_id_to_name.push_back(tail);
-			}
+			unsigned int tri_arr[3];
+			triple_file.read((char*)tri_arr, sizeof(unsigned int) * 3);
 
-			if (relation_name_to_id.find(relation) == relation_name_to_id.end())
-			{
-				relation_name_to_id.insert(make_pair(relation, relation_name_to_id.size()));
-				relation_id_to_name.push_back(relation);
-			}
+			vin_true.push_back(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
+			check_data_all.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
 
-			set_entity.insert(head);
-			set_entity.insert(tail);
-			set_relation.insert(relation);
-
-			if (flag_true == 1)
-				vin_true.push_back(make_pair(make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-				relation_name_to_id[relation]));
-
-			check_data_all.insert(make_pair(make_pair(entity_name_to_id[head], entity_name_to_id[tail]),
-				relation_name_to_id[relation])); 
+			set_entity.insert(tri_arr[0]);
+			set_entity.insert(tri_arr[2]);
+			set_relation.insert(tri_arr[1]);
 		}
-		fin.close();
+		triple_file.close();
+		prog_bar.progress_end();
+
+		if (prog_bar.progress != triple_size) {
+			cerr << "triple_deserialize: Something wrong in binary file reading. " << endl;
+		}
 	}
 
 	void sample_false_triplet(	
