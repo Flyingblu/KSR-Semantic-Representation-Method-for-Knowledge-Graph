@@ -60,8 +60,8 @@ public:
 	}
 
 public:
-	virtual double prob_triplets(const pair<pair<int, int>, int> &triplet) = 0;
-	virtual void train_triplet(const pair<pair<int, int>, int> &triplet) = 0;
+	virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
+	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
 
 public:
 	virtual void train(bool last_time = false)
@@ -272,12 +272,12 @@ public:
 		cout << "BAD";
 	}
 
-	virtual vec entity_representation(int entity_id) const
+	virtual vec entity_representation(unsigned int entity_id) const
 	{
 		cout << "BAD";
 	}
 
-	virtual vec relation_representation(int relation_id) const
+	virtual vec relation_representation(unsigned int relation_id) const
 	{
 		cout << "BAD";
 	}

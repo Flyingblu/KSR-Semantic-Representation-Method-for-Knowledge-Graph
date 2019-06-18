@@ -1,6 +1,7 @@
 #pragma once
 #include "Import.hpp"
 #include "ModelConfig.hpp"
+#include "../RDF_parser/progress_bar.hpp"
 
 class DataModel
 {
@@ -27,8 +28,8 @@ public:
 	DataModel(const Dataset& dataset)
 	{
 		// TODO: these two maps seem to be huge, see if we can optimize it. 
-		map<int, map<int, vector<int> > > rel_heads;
-		map<int, map<int, vector<int> > > rel_tails;
+		map<unsigned int, map<unsigned int, vector<unsigned int> > > rel_heads;
+		map<unsigned int, map<unsigned int, vector<unsigned int> > > rel_tails;
 		load_training(dataset.base_dir + dataset.training, rel_heads, rel_tails);
 		relation_hpt.resize(set_relation.size());
 		relation_tph.resize(set_relation.size());
@@ -82,14 +83,14 @@ public:
 	}
 
 	void load_training(const string& file_path,
-		map<int, map<int, vector<int> > >& rel_heads,
-		map<int, map<int, vector<int> > >& rel_tails)
+		map<unsigned int, map<unsigned int, vector<unsigned int> > >& rel_heads,
+		map<unsigned int, map<unsigned int, vector<unsigned int> > >& rel_tails)
 	{
 		ifstream triple_file(file_path, ios_base::binary);
 
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, log_path);
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, base_dir + "log/load_training/");
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
@@ -117,13 +118,13 @@ public:
 	}
 
 	void load_testing (const string& file_path,
-		vector<pair<pair<int, int>, int>>& vin_true)
+		vector<pair<pair<unsigned int, unsigned int>, unsigned int>>& vin_true)
 	{
 		ifstream triple_file(file_path, ios_base::binary);
 
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, log_path);
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, base_dir + "log/load_testing/");
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
@@ -147,8 +148,8 @@ public:
 	}
 
 	void sample_false_triplet(	
-		const pair<pair<int,int>,int>& origin,
-		pair<pair<int,int>,int>& triplet) const
+		const pair<pair<unsigned int,unsigned int>,unsigned int>& origin,
+		pair<pair<unsigned int,unsigned int>,unsigned int>& triplet) const
 	{
 
 		double prob = relation_hpt[origin.second]/(relation_hpt[origin.second] + relation_tph[origin.second]);

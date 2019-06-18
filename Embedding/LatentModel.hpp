@@ -21,7 +21,7 @@ public:
 	const double	sigma;
 
 public:
-	int factor_index(const int entity_id) const
+	int factor_index(const unsigned int entity_id) const
 	{
 		const vec& entity = embedding_entity[entity_id];
 
@@ -31,7 +31,7 @@ public:
 		return re_index;
 	}
 
-	SFactorE(int dim, int entity_count, int relation_count, double sigma)
+	SFactorE(int dim, unsigned int entity_count, unsigned int relation_count, double sigma)
 		:dim(dim), sigma(sigma)
 	{
 		embedding_entity.resize(entity_count);
@@ -47,7 +47,7 @@ public:
 			[=](vec& elem){elem = normalise(randu(dim), 2); });
 	}
 
-	double prob(const pair<pair<int, int>, int>& triplet)
+	double prob(const pair<pair<unsigned int, unsigned int>, unsigned int>& triplet)
 	{
 		vec& head = embedding_entity[triplet.first.first];
 		vec& tail = embedding_entity[triplet.first.second];
@@ -61,7 +61,7 @@ public:
 			- sum(abs(head_feature - tail_feature));
 	}
 
-	void train(const pair<pair<int, int>, int>& triplet, const double alpha)
+	void train(const pair<pair<unsigned int, unsigned int>, unsigned int>& triplet, const double alpha)
 	{
 		vec& head = embedding_entity[triplet.first.first];
 		vec& tail = embedding_entity[triplet.first.second];
@@ -104,7 +104,7 @@ public:
 	}
 
 public:
-	virtual vec entity_representation(int entity_id) const
+	virtual vec entity_representation(unsigned int entity_id) const
 	{
 		return embedding_entity[entity_id];
 	}
@@ -160,7 +160,7 @@ public:
 	}
 
 public:
-	Col<int> factor_index(const int entity_id) const
+	Col<int> factor_index(const unsigned int entity_id) const
 	{
 		Col<int> v_index(n_factor);
 		for (auto i = 0; i < n_factor; ++i)
@@ -171,12 +171,12 @@ public:
 		return v_index;
 	}
 
-	int category_index(const int entity_id, const int feature_id) const
+	int category_index(const unsigned int entity_id, const unsigned int feature_id) const
 	{
 		return factors[feature_id]->factor_index(entity_id);
 	}
 
-	vec get_error_vec(const pair<pair<int, int>, int> &triplet) const
+	vec get_error_vec(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) const
 	{
 		vec score(n_factor);
 		auto i_score = score.begin();
@@ -188,15 +188,15 @@ public:
 		return score;
 	}
 
-	virtual double prob_triplets(const pair<pair<int, int>, int> &triplet) override
+	virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
 	{
 		return sum(get_error_vec(triplet) % relation_space[triplet.second]);
 	}
 
 public:
-	virtual void train_triplet(const pair<pair<int, int>, int> &triplet) override
+	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
 	{
-		pair<pair<int, int>, int> triplet_f;
+		pair<pair<unsigned int, unsigned int>, unsigned int> triplet_f;
 		data_model.sample_false_triplet(triplet, triplet_f);
 
 		if (prob_triplets(triplet) - prob_triplets(triplet_f) > margin)
@@ -255,7 +255,7 @@ public:
 	}
 
 public:
-	virtual vec entity_representation(int entity_id) const
+	virtual vec entity_representation(unsigned int entity_id) const
 	{
 		vec rep_vec;
 		for (auto i = 0; i < n_factor; ++i)
