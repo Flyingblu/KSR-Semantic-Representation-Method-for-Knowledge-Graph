@@ -6,7 +6,6 @@ class Dataset
 public:
 	const string	base_dir;
 	const string	training;
-	const string	developing;
 	const string	testing;
 	const string	name;
 	const bool	self_false_sampling;
@@ -15,13 +14,11 @@ public:
 	Dataset(const string& name,
 		const string& base_dir,
 		const string& training,
-		const string& developing,
 		const string& testing,
 		const bool& self_false_sampling)
 		:name(name),
 		base_dir(base_dir),
 		training(training),
-		developing(developing),
 		testing(testing),
 		self_false_sampling(self_false_sampling)
 	{

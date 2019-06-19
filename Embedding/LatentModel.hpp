@@ -21,11 +21,11 @@ public:
 	const double	sigma;
 
 public:
-	int factor_index(const unsigned int entity_id) const
+	unsigned int factor_index(const unsigned int entity_id) const
 	{
 		const vec& entity = embedding_entity[entity_id];
 
-		unsigned int re_index;
+		uword re_index;
 		entity.max(re_index);
 
 		return re_index;
@@ -255,7 +255,7 @@ public:
 	}
 
 public:
-	virtual vec entity_representation(unsigned int entity_id) const
+	virtual vec entity_representation(unsigned int entity_id) const override
 	{
 		vec rep_vec;
 		for (auto i = 0; i < n_factor; ++i)

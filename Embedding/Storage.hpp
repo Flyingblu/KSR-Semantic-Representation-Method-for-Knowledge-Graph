@@ -8,7 +8,7 @@ template<typename T>
 class storage_vmat
 {
 public:
-	static void save(const vector<Mat<T>>& vmatout, ofstream& fout)
+	static void save(const vector<Mat<T> >& vmatout, ofstream& fout)
 	{
 		auto n_size = vmatout.size();
 		fout.write((char*)&n_size, sizeof(vmatout.size()));
@@ -22,7 +22,7 @@ public:
 		}
 	}
 
-	static void load(vector<Mat<T>>& vmatin, ifstream& fin)
+	static void load(vector<Mat<T> >& vmatin, ifstream& fin)
 	{
 		arma::uword n_size;
 		fin.read((char*)&n_size, sizeof(n_size));
@@ -41,7 +41,7 @@ public:
 	}
 
 public:
-	static void save(const vector<Col<T>>& vmatout, ofstream& fout)
+	static void save(const vector<Col<T> >& vmatout, ofstream& fout)
 	{
 		auto n_size = vmatout.size();
 		fout.write((char*)&n_size, sizeof(vmatout.size()));
@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	static void load(vector<Col<T>>& vmatin, ifstream& fin)
+	static void load(vector<Col<T> >& vmatin, ifstream& fin)
 	{
 		arma::uword n_size;
 		fin.read((char*)&n_size, sizeof(n_size));
@@ -104,8 +104,8 @@ class storage_vector
 public:
 	static void save(const vector<T>& vscr, ofstream& fout)
 	{
-		auto n_size = vmatout.size();
-		fout.write((char*)&n_size, sizeof(vmatout.size()));
+		auto n_size = vscr.size();
+		fout.write((char*)&n_size, sizeof(vscr.size()));
 
 		for (auto i = vscr.begin(); i != vscr.end(); ++i)
 		{
@@ -113,15 +113,15 @@ public:
 		}
 	}
 
-	static void load(vector<T>& vscr, ifstream& fout)
+	static void load(vector<T>& vscr, ifstream& fin)
 	{
 		arma::uword	n_size;
-		fout.read((char*)&n_size, sizeof(vmatout.size()));
+		fin.read((char*)&n_size, sizeof(vscr.size()));
 
 		vscr.resize(n_size);
 		for (auto i = vscr.begin(); i != vscr.end(); ++i)
 		{
-			fout.write((char*)&(*i), sizeof(T));
+			fin.read((char*)&(*i), sizeof(T));
 		}
 	}
 };

@@ -90,7 +90,8 @@ public:
 
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, base_dir + "log/load_training/");
+		// TODO: change api
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, "log/load_training/");
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
@@ -118,13 +119,14 @@ public:
 	}
 
 	void load_testing (const string& file_path,
-		vector<pair<pair<unsigned int, unsigned int>, unsigned int>>& vin_true)
+		vector<pair<pair<unsigned int, unsigned int>, unsigned int> >& vin_true)
 	{
 		ifstream triple_file(file_path, ios_base::binary);
 
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, base_dir + "log/load_testing/");
+		// TODO: change api
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, "log/load_testing/");
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
