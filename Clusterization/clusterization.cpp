@@ -45,15 +45,15 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    if (cluster.find(fidl) != cluster.end() && cluster.find(fidr) != cluster.end())
+    if (s_cluster.find(fidl) != s_cluster.end() && s_cluster.find(fidr) != s_cluster.end())
         return;
-    else if(cluster.find(fidl) != cluster.end())
+    else if(s_cluster.find(fidl) != s_cluster.end())
     {
         us[fidr] = fidl;
         cunt[fidl] += cunt[fidr];
         return;
     }
-    else if(cluster.find(fidr) != cluster.end())
+    else if(s_cluster.find(fidr) != s_cluster.end())
     {
         us[fidl] = fidr;
         cunt[fidr] += cunt[fidl];
