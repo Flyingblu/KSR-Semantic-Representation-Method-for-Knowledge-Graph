@@ -67,18 +67,18 @@ void cluster::join(unsigned int idl, unsigned int idr)
 void cluster::logging()
 {
     cout << "logging ... " << endl;
-    ofstream writer(save_path + "_log"); // log cluster 
+    //ofstream writer(save_path + "_log"); // log cluster 
     ofstream writer_1(save_path + "_cunt_e");
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
-    boost::progress_display display(vector_size);
     cout << "sorting ..." << endl;
     sort(cunt_entities.begin(), cunt_entities.end(), greater<int>());
     cout << "logging to the file ..." << endl;
-    for (int i = 0; i < vector_size; ++i)
+    boost::progress_display display(vector_size);
+    /*for (int i = 0; i < vector_size; ++i)
     {
-        /*
+        
         if (find(i) == i)
         {
             count++;
@@ -86,13 +86,18 @@ void cluster::logging()
 
             total += cunt[i];
         }
-        */
+        
+        
+        ++display;
+    }
+    */
+    for (int i = 0; i < 1000; ++i)
+    {
         writer_1 << i << "th entities : id : " << i << "\t" << "cunt_entities appear : " << cunt_entities[i] << endl;
         ++display;
     }
-    
-    writer << "total : " << total;
-    writer.close();
+    //writer << "total : " << total;
+    //writer.close();
     writer_1.close();
 }
 
