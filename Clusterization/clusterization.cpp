@@ -1,5 +1,6 @@
 #include "clusterization.hpp"
 #include <boost/progress.hpp>
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
@@ -44,49 +45,78 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    else if (cunt[fidl] >= 42290058 || cunt[fidr] >= 42290058)
+    if (s_cluster.find(fidl) != s_cluster.end() && s_cluster.find(fidr) != s_cluster.end())
         return;
-    else if (cunt[fidl] > cunt[fidr])
-        {
-            us[fidr] = fidl;
-            cunt[fidl] += cunt[fidr];
-            return;
-        }
-    else if (cunt[fidl] < cunt[fidr])
+    else if(s_cluster.find(fidl) != s_cluster.end())
+    {
+        us[fidr] = fidl;
+        cunt[fidl] += cunt[fidr];
+        return;
+    }
+    else if(s_cluster.find(fidr) != s_cluster.end())
     {
         us[fidl] = fidr;
         cunt[fidr] += cunt[fidl];
         return;
     }
     else
-        us[fidl] = us[fidr];
-        cunt[fidr] += cunt[fidl];
-        return;
+    {
+        if (cunt[fidl] > cunt[fidr])
+        {
+            us[fidr] = fidl;
+            cunt[fidl] += cunt[fidr];
+            return;
+        }
+        else if (cunt[fidl] < cunt[fidr])
+        {
+            us[fidl] = fidr;
+            cunt[fidr] += cunt[fidl];
+            return;
+        }
+        else
+        {   
+            us[fidl] = us[fidr];
+            cunt[fidr] += cunt[fidl];
+            return;
+        }
+    }
 }
 void cluster::logging()
 {
     cout << "logging ... " << endl;
     ofstream writer(save_path + "_log"); // log cluster 
-    ofstream writer_1(save_path + "_cunt_e");
+    //ofstream writer_1(save_path + "_cunt_e");
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
+    //cout << "sorting ..." << endl;
+    //sort(cunt_entities.begin(), cunt_entities.end(), greater<int>());
+    cout << "logging to the file ..." << endl;
     boost::progress_display display(vector_size);
-    
     for (int i = 0; i < vector_size; ++i)
     {
+        
         if (find(i) == i)
         {
             count++;
             writer << count << "th cluster :  id : " << i << "\t" << "num_line :" << cunt[i] << endl;
-            writer_1 << count << "th cluster : id : " << i << "\t" << "cunt_enties appear : " << cunt_entities[i] << endl;
+
             total += cunt[i];
         }
+        
+        
         ++display;
     }
+    /* 
+    for (int i = 0; i < 1000; ++i)
+    {
+        writer_1 << i << "th entities : id : " << i << "\t" << "cunt_entities appear : " << cunt_entities[i] << endl;
+        ++display;
+    }
+    */
     writer << "total : " << total;
     writer.close();
-    writer_1.close();
+    //writer_1.close();
 }
 
 /*

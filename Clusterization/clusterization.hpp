@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -39,6 +40,7 @@ class cluster
         vector<unsigned int> us;
         vector<unsigned int> cunt;
         vector<unsigned int> cunt_entities;
+        set <int> s_cluster = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
         string save_path; 
         unsigned int find(unsigned int id);
         void join(unsigned int idl, unsigned int idr);
