@@ -18,7 +18,7 @@ void cluster::clusterizing()
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
             ++cunt_entities[tri_arr[0]];
             ++cunt_entities[tri_arr[2]];
-            //join(tri_arr[0], tri_arr[2]);
+            join(tri_arr[0], tri_arr[2]);
             ++display;
         }
     }
@@ -45,38 +45,55 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    //else if (cunt[fidl] >= 42290058 || cunt[fidr] >= 42290058)
-        //return;
-    else if (cunt[fidl] > cunt[fidr])
-        {
-            us[fidr] = fidl;
-            cunt[fidl] += cunt[fidr];
-            return;
-        }
-    else if (cunt[fidl] < cunt[fidr])
+    if (cluster.find(fidl) != cluster.end() && cluster.find(fidr) != cluster.end())
+        return;
+    else if(cluster.find(fidl) != cluster.end())
+    {
+        us[fidr] = fidl;
+        cunt[fidl] += cunt[fidr];
+        return;
+    }
+    else if(cluster.find(fidr) != cluster.end())
     {
         us[fidl] = fidr;
         cunt[fidr] += cunt[fidl];
         return;
     }
     else
-        us[fidl] = us[fidr];
-        cunt[fidr] += cunt[fidl];
-        return;
+    {
+        if (cunt[fidl] > cunt[fidr])
+        {
+            us[fidr] = fidl;
+            cunt[fidl] += cunt[fidr];
+            return;
+        }
+        else if (cunt[fidl] < cunt[fidr])
+        {
+            us[fidl] = fidr;
+            cunt[fidr] += cunt[fidl];
+            return;
+        }
+        else
+        {   
+            us[fidl] = us[fidr];
+            cunt[fidr] += cunt[fidl];
+            return;
+        }
+    }
 }
 void cluster::logging()
 {
     cout << "logging ... " << endl;
-    //ofstream writer(save_path + "_log"); // log cluster 
-    ofstream writer_1(save_path + "_cunt_e");
+    ofstream writer(save_path + "_log"); // log cluster 
+    //ofstream writer_1(save_path + "_cunt_e");
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
-    cout << "sorting ..." << endl;
-    sort(cunt_entities.begin(), cunt_entities.end(), greater<int>());
+    //cout << "sorting ..." << endl;
+    //sort(cunt_entities.begin(), cunt_entities.end(), greater<int>());
     cout << "logging to the file ..." << endl;
     boost::progress_display display(vector_size);
-    /*for (int i = 0; i < vector_size; ++i)
+    for (int i = 0; i < vector_size; ++i)
     {
         
         if (find(i) == i)
@@ -90,15 +107,16 @@ void cluster::logging()
         
         ++display;
     }
-    */
+    /* 
     for (int i = 0; i < 1000; ++i)
     {
         writer_1 << i << "th entities : id : " << i << "\t" << "cunt_entities appear : " << cunt_entities[i] << endl;
         ++display;
     }
-    //writer << "total : " << total;
-    //writer.close();
-    writer_1.close();
+    */
+    writer << "total : " << total;
+    writer.close();
+    //writer_1.close();
 }
 
 /*
