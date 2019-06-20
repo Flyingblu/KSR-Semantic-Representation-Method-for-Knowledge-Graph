@@ -35,7 +35,7 @@ class cluster
             for (unsigned int i = 0; i < reserve_num; ++i) 
             {
                 Entities entities(i);
-                cunt_entities.push_back(entities);
+                cunt_entities[i] = entities;
             }
             
         };
