@@ -16,8 +16,8 @@ void cluster::clusterizing()
         {
             unsigned int tri_arr[3];
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
-            ++cunt_entities[tri_arr[0]];
-            ++cunt_entities[tri_arr[2]];
+            ++cunt_entities[tri_arr[0]].cunt_entities;
+            ++cunt_entities[tri_arr[2]].cunt_entities;
             join(tri_arr[0], tri_arr[2]);
             ++display;
         }
@@ -45,53 +45,42 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    if (s_cluster.find(fidl) != s_cluster.end() && s_cluster.find(fidr) != s_cluster.end())
+    else if (cunt[fidl] > 1000000 || cunt[fidr] > 1000000)
         return;
-    else if(s_cluster.find(fidl) != s_cluster.end())
+    else if (cunt[fidl] > cunt[fidr])   
     {
         us[fidr] = fidl;
         cunt[fidl] += cunt[fidr];
         return;
     }
-    else if(s_cluster.find(fidr) != s_cluster.end())
+    else if (cunt[fidl] < cunt[fidr])
     {
         us[fidl] = fidr;
         cunt[fidr] += cunt[fidl];
         return;
     }
     else
-    {
-        if (cunt[fidl] > cunt[fidr])
-        {
-            us[fidr] = fidl;
-            cunt[fidl] += cunt[fidr];
-            return;
-        }
-        else if (cunt[fidl] < cunt[fidr])
-        {
-            us[fidl] = fidr;
-            cunt[fidr] += cunt[fidl];
-            return;
-        }
-        else
-        {   
-            us[fidl] = us[fidr];
-            cunt[fidr] += cunt[fidl];
-            return;
-        }
+    {   
+        us[fidl] = us[fidr];
+        cunt[fidr] += cunt[fidl];
+        return;
     }
+
 }
 void cluster::logging()
 {
-    cout << "logging ... " << endl;
+    log_cluster();
+    log_entities_fre();
+    return;
+}
+
+void cluster::log_cluster()
+{
+    cout << "log_cluster ...";
     ofstream writer(save_path + "_log"); // log cluster 
-    //ofstream writer_1(save_path + "_cunt_e");
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
-    //cout << "sorting ..." << endl;
-    //sort(cunt_entities.begin(), cunt_entities.end(), greater<int>());
-    cout << "logging to the file ..." << endl;
     boost::progress_display display(vector_size);
     for (int i = 0; i < vector_size; ++i)
     {
@@ -99,40 +88,45 @@ void cluster::logging()
         if (find(i) == i)
         {
             count++;
-            writer << count << "th cluster :  id : " << i << "\t" << "num_line :" << cunt[i] << endl;
+            writer << count << "th cluster :  id : " << i << "\t" << "num_entities :" << cunt[i] << endl;
 
             total += cunt[i];
         }
-        
-        
         ++display;
     }
-    /* 
-    for (int i = 0; i < 1000; ++i)
-    {
-        writer_1 << i << "th entities : id : " << i << "\t" << "cunt_entities appear : " << cunt_entities[i] << endl;
-        ++display;
-    }
-    */
     writer << "total : " << total;
     writer.close();
-    //writer_1.close();
+
 }
 
-/*
-void cluster::logging_small_cluster(unsigned int cluster_id)
+void cluster::log_entities_fre()
 {
-    ofstream writer(save_path + "_s"); // small cluster
-    size_t vector_size = us.size();
-    for(int i = 0; i < vector_size; ++i)
+    cout << "log_entities_fre ... " << endl;
+    ofstream writer(save_path + "_cunt_e");
+    ofstream wirter_1(save_path + "_less5")
+    size_t vector_size = cunt_entities.size()
+    unsigned int count = 0; 
+    unsigned int total = 0; // count of entites's fre lower than 5
+
+    cout << "sorting ..." << endl;
+    sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities});
+
+    boost::progress_display display(vector_size);    
+    for (int i = 0; i < vector_size; ++i)
     {
-        if (find(i) != cluster_id)
+        writer << count << "th cluster : id : " << cunt_entities[i].id << " frequency " << cunt_entities[i].cunt_entities << endl;
+        if (cunt_entities[i].cunt_entities <= 5)
         {
-            writer << 
+            ++total;
+            writer_1 << "cluster id :" << cunt_entities[i].id << " frequency :" <<cunt_entities[i].cunt_entities << endl;
         }
+        ++display;
     }
+    writer << "number of entites which fre less than 5 :" << total;
+    writer.close();
+    writer_1 << "number of entites which fre less than 5 :" << total;
+    writer_1.close();
 }
-*/
 vector<unsigned int> cluster::getunionset()
 {
     return us;
