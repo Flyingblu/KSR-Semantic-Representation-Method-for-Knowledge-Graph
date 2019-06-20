@@ -7,14 +7,16 @@
 #include <fstream>
 #include <iostream>
 using namespace std;
+
 class Entities
 {
     public:
-        Entities(unsigned id): id(id), cunt_entities(0){};
+        Entities();
+        Entities(unsigned int id): id(id), cunt_entities(0){};
         
         unsigned int id;
         unsigned int cunt_entities;
-}
+};
 class cluster
 {
     public:
@@ -30,7 +32,7 @@ class cluster
                 us[i] = i;
             }
             cunt_entities.resize(reserve_num);
-            for (int i = 0; i < reserve_num; ++i) 
+            for (unsigned int i = 0; i < reserve_num; ++i) 
             {
                 Entities entities(i);
                 cunt_entities.push_back(entities);

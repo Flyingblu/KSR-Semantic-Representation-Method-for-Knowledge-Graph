@@ -103,13 +103,13 @@ void cluster::log_entities_fre()
 {
     cout << "log_entities_fre ... " << endl;
     ofstream writer(save_path + "_cunt_e");
-    ofstream wirter_1(save_path + "_less5")
-    size_t vector_size = cunt_entities.size()
+    ofstream writer_1(save_path + "_less5");
+    size_t vector_size = cunt_entities.size();
     unsigned int count = 0; 
     unsigned int total = 0; // count of entites's fre lower than 5
 
     cout << "sorting ..." << endl;
-    sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities});
+    sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities;});
 
     boost::progress_display display(vector_size);    
     for (int i = 0; i < vector_size; ++i)
