@@ -23,8 +23,9 @@ public:
 public:
 	Model(const Dataset &dataset,
 		  const TaskType &task_type,
-		  const string &logging_base_path)
-		: data_model(*(new DataModel(dataset))), task_type(task_type),
+		  const string &logging_base_path
+		  const bool do_load_testing)
+		: data_model(*(new DataModel(dataset, do_load_testing))), task_type(task_type),
 		  logging(*(new ModelLogging(logging_base_path))),
 		  be_deleted_data_model(true)
 	{

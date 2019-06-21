@@ -11,7 +11,7 @@ using namespace std;
 class Entities
 {
     public:
-        Entities();
+        Entities(){};
         Entities(unsigned int id): id(id), cunt_entities(0){};
         
         unsigned int id;

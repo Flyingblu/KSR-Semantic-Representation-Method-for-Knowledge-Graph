@@ -12,18 +12,18 @@
 class SFactorE
 {
 protected:
-	vector<vec>	embedding_entity;
-	vector<vec>	embedding_relation_head;
-	vector<vec>	embedding_relation_tail;
+	vector<vec> embedding_entity;
+	vector<vec> embedding_relation_head;
+	vector<vec> embedding_relation_tail;
 
 public:
-	const int		dim;
-	const double	sigma;
+	const int dim;
+	const double sigma;
 
 public:
 	unsigned int factor_index(const unsigned int entity_id) const
 	{
-		const vec& entity = embedding_entity[entity_id];
+		const vec &entity = embedding_entity[entity_id];
 
 		uword re_index;
 		entity.max(re_index);
@@ -32,55 +32,50 @@ public:
 	}
 
 	SFactorE(int dim, unsigned int entity_count, unsigned int relation_count, double sigma)
-		:dim(dim), sigma(sigma)
+		: dim(dim), sigma(sigma)
 	{
 		embedding_entity.resize(entity_count);
 		for_each(embedding_entity.begin(), embedding_entity.end(),
-			[=](vec& elem){elem = normalise(randu(dim), 2); });
+				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
 
 		embedding_relation_head.resize(relation_count);
 		for_each(embedding_relation_head.begin(), embedding_relation_head.end(),
-			[=](vec& elem){elem = normalise(randu(dim), 2); });
+				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
 
 		embedding_relation_tail.resize(relation_count);
 		for_each(embedding_relation_tail.begin(), embedding_relation_tail.end(),
-			[=](vec& elem){elem = normalise(randu(dim), 2); });
+				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
 	}
 
-	double prob(const pair<pair<unsigned int, unsigned int>, unsigned int>& triplet)
+	double prob(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet)
 	{
-		vec& head = embedding_entity[triplet.first.first];
-		vec& tail = embedding_entity[triplet.first.second];
-		vec& relation_head = embedding_relation_head[triplet.second];
-		vec& relation_tail = embedding_relation_tail[triplet.second];
+		vec &head = embedding_entity[triplet.first.first];
+		vec &tail = embedding_entity[triplet.first.second];
+		vec &relation_head = embedding_relation_head[triplet.second];
+		vec &relation_tail = embedding_relation_tail[triplet.second];
 
 		vec head_feature = head % relation_head;
 		vec tail_feature = tail % relation_tail;
 
-		return log(sum(head_feature % tail_feature)) * sigma
-			- sum(abs(head_feature - tail_feature));
+		return log(sum(head_feature % tail_feature)) * sigma - sum(abs(head_feature - tail_feature));
 	}
 
-	void train(const pair<pair<unsigned int, unsigned int>, unsigned int>& triplet, const double alpha)
+	void train(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet, const double alpha)
 	{
-		vec& head = embedding_entity[triplet.first.first];
-		vec& tail = embedding_entity[triplet.first.second];
-		vec& relation_head = embedding_relation_head[triplet.second];
-		vec& relation_tail = embedding_relation_tail[triplet.second];
+		vec &head = embedding_entity[triplet.first.first];
+		vec &tail = embedding_entity[triplet.first.second];
+		vec &relation_head = embedding_relation_head[triplet.second];
+		vec &relation_tail = embedding_relation_tail[triplet.second];
 
 		vec head_feature = head % relation_head;
 		vec tail_feature = tail % relation_tail;
 		vec feature = head_feature % tail_feature;
 		vec grad = sign(head_feature - tail_feature);
 
-		head += -alpha * grad % relation_head
-			+ alpha * relation_head % tail_feature / sum(feature) * sigma;
-		relation_head += -alpha * grad % head
-			+ alpha * head % tail_feature / sum(feature) * sigma;
-		tail += alpha * grad % relation_tail
-			+ alpha * relation_tail % head_feature / sum(feature) * sigma;
-		relation_tail += alpha * grad % tail
-			+ alpha * tail % head_feature / sum(feature) * sigma;
+		head += -alpha * grad % relation_head + alpha * relation_head % tail_feature / sum(feature) * sigma;
+		relation_head += -alpha * grad % head + alpha * head % tail_feature / sum(feature) * sigma;
+		tail += alpha * grad % relation_tail + alpha * relation_tail % head_feature / sum(feature) * sigma;
+		relation_tail += alpha * grad % tail + alpha * tail % head_feature / sum(feature) * sigma;
 
 		head = normalise(max(head, ones(dim) / pow(dim, 5)), 2);
 		tail = normalise(max(tail, ones(dim) / pow(dim, 5)), 2);
@@ -89,14 +84,14 @@ public:
 	}
 
 public:
-	void save(ofstream & fout)
+	void save(ofstream &fout)
 	{
 		storage_vmat<double>::save(embedding_entity, fout);
 		storage_vmat<double>::save(embedding_relation_head, fout);
 		storage_vmat<double>::save(embedding_relation_tail, fout);
 	}
 
-	void load(ifstream & fin)
+	void load(ifstream &fin)
 	{
 		storage_vmat<double>::load(embedding_entity, fin);
 		storage_vmat<double>::load(embedding_relation_head, fin);
@@ -109,7 +104,6 @@ public:
 		return embedding_entity[entity_id];
 	}
 };
-
 
 class MFactorE
 	: public Model
@@ -137,8 +131,9 @@ public:
 		double alpha,
 		double training_threshold,
 		double sigma,
-		int n_factor)
-		: Model(dataset, task_type, logging_base_path),
+		int n_factor,
+		bool do_load_testing)
+		: Model(dataset, task_type, logging_base_path, do_load_testing),
 		  dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";

@@ -8,45 +8,61 @@
 
 #include "progress_bar.hpp"
 
-void ProgressBar::progress_begin() {
+void ProgressBar::progress_begin()
+{
   cout << endl;
   this->prog_bar_td = new thread(&ProgressBar::detect_progress, this);
 }
 
-void ProgressBar::detect_progress() {
+void ProgressBar::detect_progress()
+{
+
   string output = this->message + "\t";
   int cnt = 0;
   bool save = (this->save_path != "");
-  ofstream parse_speed_log(this->save_path + "parse_speed.log");
-  ofstream memory_log(this->save_path + "memory_usage.log");
-  ofstream read_speed_log(this->save_path + "read_speed.log");
-  ofstream cpu_log(this->save_path + "cpu.log");
-  cpu_log << sysconf(_SC_CLK_TCK) << endl;
+  ofstream parse_speed_log;
+  ofstream memory_log;
+  ofstream read_speed_log;
+  ofstream cpu_log;
+
   string pid = to_string(getpid());
   string proc_mem_path = "/proc/" + pid + "/statm";
   string proc_read_path = "/proc/" + pid + "/io";
   string proc_cpu_path = "/proc/" + pid + "/stat";
   string tmp;
 
+  if (save)
+  {
+    parse_speed_log.open(this->save_path + "parse_speed.log");
+    memory_log.open(this->save_path + "memory_usage.log");
+    read_speed_log.open(this->save_path + "read_speed.log");
+    cpu_log.open(this->save_path + "cpu.log");
+    cpu_log << sysconf(_SC_CLK_TCK) << endl;
+  }
+
   auto detect = [&]() -> void {
     printf("%c[2K", 27);
     cout << '\r';
-    if(this->graduation != -1) {
+    if (this->graduation != -1)
+    {
 
       double percentage = double(this->progress) / double(this->graduation);
       cout << setprecision(4) << output << percentage * 100 << '%' << '\r' << flush;
-
-    } else {
+    }
+    else
+    {
 
       cout << output << this->progress << '\r' << flush;
     }
   };
-  
-  while(!this->ended) {
+
+  while (!this->ended)
+  {
     detect();
     this_thread::sleep_for(chrono::milliseconds(50));
     cnt += 1;
-    if(save && cnt % 20 == 0) {
+    if (save && cnt % 20 == 0)
+    {
       parse_speed_log << this->progress << endl;
 
       ifstream proc_mem(proc_mem_path);
@@ -77,12 +93,14 @@ void ProgressBar::detect_progress() {
   cpu_log.close();
 }
 
-void ProgressBar::progress_end() {
+void ProgressBar::progress_end()
+{
 
-  if (this->ended) {
+  if (this->ended)
+  {
 
-      cerr << "ProgressBar: progress already ended! " << endl;
-      return;
+    cerr << "ProgressBar: progress already ended! " << endl;
+    return;
   }
 
   this->ended = true;
@@ -90,7 +108,7 @@ void ProgressBar::progress_end() {
   cout << endl;
 
   auto end_time = std::chrono::system_clock::now();
-  chrono::duration<double> elapsed_seconds = end_time-this->start_time;
+  chrono::duration<double> elapsed_seconds = end_time - this->start_time;
   time_t end_time_t = std::chrono::system_clock::to_time_t(end_time);
 
   cout << "Finished at: " << ctime(&end_time_t);
