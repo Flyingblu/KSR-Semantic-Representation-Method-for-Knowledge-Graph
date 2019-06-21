@@ -104,21 +104,36 @@ void cluster::log_entities_fre()
     cout << "log_entities_fre ... " << endl;
     ofstream writer(save_path + "_cunt_e");
     ofstream writer_1(save_path + "_less5");
+    
     size_t vector_size = cunt_entities.size();
     unsigned int count = 0; 
     unsigned int total = 0; // count of entites's fre lower than 5
 
-    cout << "sorting ..." << endl;
+    boost::progress_display display(vector_size);    
+    if (ordered)
+    {
+        ofstream writer_2(save_path + "_cunt_e_o");
+        for (int i = 0; i < vector_size; ++i)
+        {   
+            count++;
+            writer_2 << count << "th cluster : id : " << cunt_entities[i].id << "\t frequency " << cunt_entities[i].cunt_entities << endl;
+            ++display;
+        }
+        writer_2.close();
+    }
+
+    cout << "sorting base on cunt ..." << endl;
     sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities;});
 
     boost::progress_display display(vector_size);    
     for (int i = 0; i < vector_size; ++i)
-    {
-        writer << count << "th cluster : id : " << cunt_entities[i].id << " frequency " << cunt_entities[i].cunt_entities << endl;
+    {   
+        count++;
+        writer << count << "th cluster : id : " << cunt_entities[i].id << "\t frequency " << cunt_entities[i].cunt_entities << endl;
         if (cunt_entities[i].cunt_entities <= 5)
         {
             ++total;
-            writer_1 << "cluster id :" << cunt_entities[i].id << " frequency :" <<cunt_entities[i].cunt_entities << endl;
+            writer_1 << "cluster id :" << cunt_entities[i].id << "\t frequency :" <<cunt_entities[i].cunt_entities << endl;
         }
         ++display;
     }
