@@ -3,9 +3,9 @@
 #include <fstream>
 int main()
 {
-    cluster c("/PATH/TO/TRIPLE.DATA", "/PATH/TO/LOGFILE", ENTITIES_SIZE);
+    cluster c("/PATH/TO/TRIPLE.DATA", "/PATH/TO/LOGFILE", 'ENTITIES_SIZE');
     c.clusterizing();
-    c.logging();
+    c.logging(true);
 
     return 0;
 }

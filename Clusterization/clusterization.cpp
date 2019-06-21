@@ -67,10 +67,10 @@ void cluster::join(unsigned int idl, unsigned int idr)
     }
 
 }
-void cluster::logging()
+void cluster::logging(bool ordered)
 {
     log_cluster();
-    log_entities_fre();
+    log_entities_fre(ordered);
     return;
 }
 
@@ -99,7 +99,7 @@ void cluster::log_cluster()
 
 }
 
-void cluster::log_entities_fre()
+void cluster::log_entities_fre(bool ordered)
 {
     cout << "log_entities_fre ... " << endl;
     ofstream writer(save_path + "_cunt_e");
@@ -124,8 +124,9 @@ void cluster::log_entities_fre()
 
     cout << "sorting base on cunt ..." << endl;
     sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities;});
-
-    boost::progress_display display(vector_size);    
+    
+    count = 0;
+    display.restart(vector_size);   
     for (int i = 0; i < vector_size; ++i)
     {   
         count++;
@@ -133,7 +134,7 @@ void cluster::log_entities_fre()
         if (cunt_entities[i].cunt_entities <= 5)
         {
             ++total;
-            writer_1 << "cluster id :" << cunt_entities[i].id << "\t frequency :" <<cunt_entities[i].cunt_entities << endl;
+            writer_1 << total << "th cluster id :" << cunt_entities[i].id << "\t frequency :" <<cunt_entities[i].cunt_entities << endl;
         }
         ++display;
     }
