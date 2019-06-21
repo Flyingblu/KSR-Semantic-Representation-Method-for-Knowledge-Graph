@@ -103,7 +103,7 @@ public:
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
 		// TODO: change api
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, "log/load_training/");
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size);
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {
@@ -138,7 +138,7 @@ public:
 		size_t triple_size;
 		triple_file.read((char*)& triple_size, sizeof(size_t));
 		// TODO: change api
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size, "log/load_testing/");
+		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size);
 		prog_bar.progress_begin();
 
 		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress) {

@@ -17,16 +17,24 @@ void ProgressBar::detect_progress() {
   string output = this->message + "\t";
   int cnt = 0;
   bool save = (this->save_path != "");
-  ofstream parse_speed_log(this->save_path + "parse_speed.log");
-  ofstream memory_log(this->save_path + "memory_usage.log");
-  ofstream read_speed_log(this->save_path + "read_speed.log");
-  ofstream cpu_log(this->save_path + "cpu.log");
-  cpu_log << sysconf(_SC_CLK_TCK) << endl;
+  ofstream parse_speed_log;
+  ofstream memory_log;
+  ofstream read_speed_log;
+  ofstream cpu_log;
+
   string pid = to_string(getpid());
   string proc_mem_path = "/proc/" + pid + "/statm";
   string proc_read_path = "/proc/" + pid + "/io";
   string proc_cpu_path = "/proc/" + pid + "/stat";
   string tmp;
+
+  if (save) {
+    parse_speed_log.open(this->save_path + "parse_speed.log");
+    memory_log.open(this->save_path + "memory_usage.log");
+    read_speed_log.open(this->save_path + "read_speed.log");
+    cpu_log.open(this->save_path + "cpu.log");
+    cpu_log << sysconf(_SC_CLK_TCK) << endl;
+  }
 
   auto detect = [&]() -> void {
     printf("%c[2K", 27);

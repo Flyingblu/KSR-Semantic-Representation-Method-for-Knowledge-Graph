@@ -137,8 +137,9 @@ public:
 		double alpha,
 		double training_threshold,
 		double sigma,
-		int n_factor)
-		: Model(dataset, task_type, logging_base_path),
+		int n_factor, 
+		bool do_load_training)
+		: Model(dataset, task_type, logging_base_path, do_load_training),
 		  dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";

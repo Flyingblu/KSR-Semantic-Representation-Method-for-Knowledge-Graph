@@ -23,8 +23,9 @@ public:
 public:
 	Model(const Dataset &dataset,
 		  const TaskType &task_type,
-		  const string &logging_base_path)
-		: data_model(*(new DataModel(dataset))), task_type(task_type),
+		  const string &logging_base_path, 
+		  bool do_load_testing)
+		: data_model(*(new DataModel(dataset, do_load_testing))), task_type(task_type),
 		  logging(*(new ModelLogging(logging_base_path))),
 		  be_deleted_data_model(true)
 	{
@@ -33,30 +34,6 @@ public:
 
 		logging.record() << "\t[Dataset]\t" << dataset.name;
 		logging.record() << TaskTypeName(task_type);
-	}
-
-	Model(const Dataset &dataset,
-		  const string &file_zero_shot,
-		  const TaskType &task_type,
-		  const string &logging_base_path)
-		: data_model(*(new DataModel(dataset))), task_type(task_type),
-		  logging(*(new ModelLogging(logging_base_path))),
-		  be_deleted_data_model(true)
-	{
-		epos = 0;
-		std::cout << "Ready" << endl;
-
-		logging.record() << "\t[Dataset]\t" << dataset.name;
-		logging.record() << TaskTypeName(task_type);
-	}
-
-	Model(const DataModel *data_model,
-		  const TaskType &task_type,
-		  ModelLogging *logging)
-		: data_model(*data_model), logging(*logging), task_type(task_type),
-		  be_deleted_data_model(false)
-	{
-		epos = 0;
 	}
 
 public:
