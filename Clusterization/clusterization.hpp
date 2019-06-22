@@ -44,7 +44,7 @@ class cluster
             delete this->reader;
         };
         void clusterizing();    
-        void logging(bool);
+        void logging(bool, bool);
         void log_cluster();
         void log_entities_fre(bool);
         vector<unsigned int> getunionset();

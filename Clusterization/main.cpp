@@ -5,7 +5,7 @@ int main()
 {
     cluster c("/PATH/TO/TRIPLE.DATA", "/PATH/TO/LOGFILE", ENTITIES_SIZE);
     c.clusterizing();
-    c.logging(true);
+    c.logging(false, false);
 
     return 0;
 }

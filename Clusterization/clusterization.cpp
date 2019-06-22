@@ -45,7 +45,7 @@ void cluster::join(unsigned int idl, unsigned int idr)
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
         return;
-    else if (cunt[fidl] > 1000000 || cunt[fidr] > 1000000)
+    else if (cunt[fidl] > 5000000 || cunt[fidr] > 5000000)
         return;
     else if (cunt[fidl] > cunt[fidr])   
     {
@@ -67,10 +67,13 @@ void cluster::join(unsigned int idl, unsigned int idr)
     }
 
 }
-void cluster::logging(bool ordered)
+void cluster::logging(bool log_entities, bool ordered)
 {
     log_cluster();
-    log_entities_fre(ordered);
+    if (log_entities)
+    {
+        log_entities_fre(ordered);
+    }
     return;
 }
 
