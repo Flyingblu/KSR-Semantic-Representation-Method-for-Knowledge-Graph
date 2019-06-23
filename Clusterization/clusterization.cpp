@@ -1,5 +1,5 @@
 #include "clusterization.hpp"
-#include <./RDF_parser/progress_bar.hpp>
+#include "./RDF_parser/progress_bar.hpp"
 #include <algorithm>
 #include <iostream>
 using namespace std;
