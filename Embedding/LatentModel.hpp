@@ -187,7 +187,7 @@ public:
 	{
 		return sum(get_error_vec(triplet) % relation_space[triplet.second]);
 	}
-
+	
 public:
 	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
 	{

@@ -2,7 +2,7 @@
 #include "Import.hpp"
 #include "ModelConfig.hpp"
 #include "DataModel.hpp"
-#include <boost/progress.hpp>
+#include "../RDF_parser/progress_bar.hpp"
 
 using namespace std;
 using namespace arma;
@@ -57,14 +57,15 @@ public:
 		logging.record() << "\t[Epos]\t" << total_epos;
 
 		--total_epos;
-		boost::progress_display cons_bar(total_epos);
+		ProgressBar prog_bar("Training", total_epos);
+		prog_bar.progress_begin();
 		while (total_epos-- > 0)
 		{
-			++cons_bar;
+			++prog_bar.progress;
 			train();
 		}
-
 		train(true);
+		prog_bar.progress_end();
 	}
 
 public:
