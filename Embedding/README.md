@@ -5,10 +5,6 @@ This Project is contributed by Xiao Han in Tsinghua University.
 -	KGE.zip
 
 ## Supported Papers
--	ManifoldE (IJCAI.2016): http://www.ibookman.net/IJCAI.2016.ManifoldE.pdf
--	TransG (ACL.2016): http://www.ibookman.net/ACL.2016.TransG.pdf
--	SSP (AAAI.2017): http://www.ibookman.net/AAAI.2017.SSP.pdf
--	TransA (Arxiv): http://www.ibookman.net/Arxiv.TransA.pdf
 -	KSR (submitting to ACL.2017): http://www.ibookman.net/Arixv.KSR.pdf
 
 ## Citation
@@ -74,16 +70,11 @@ Conventionally, if this project helps you, please cite our paper, correspondding
 -	**Notably, our code needs a little more turns to converge, we suggest 10,000 rounds for each experiment.** This is a critical trick for repeating our experiments.
 
 ## Alias
--	OrbitE = ManifoldE
 -	MFactorE = KSR
 
 ## Code Structures
 -	Import.hpp imports the headers of project.
 -	DataModel.hpp specifies the data structure of knowledge graph.
 -	Model.hpp specifies the training and testing process of knowledge embedding model.
--	DetailedConfig.hpp specifies the detailed configuration of project, such as file path.
 -	Embedding.cpp is the main source file.
--	GeometricModel.hpp implements TransE, TransH and TransR.
--	OrbitModel.hpp implements ManifoldE.
--	SemanticModel.hpp implements SSP.
 -	LatentModel.hpp implements KSR. 
