@@ -93,18 +93,13 @@ public:
 			++arr_total[data_model.relation_type[i->second]];
 		}
 
-		int cnt = 0;
-
-		boost::progress_display cons_bar(data_model.data_test_true.size() / 100);
+		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size();
+		prog_bar.progress_begin();
 
 #pragma omp parallel for
 		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
 		{
-			++cnt;
-			if (cnt % 100 == 0)
-			{
-				++cons_bar;
-			}
+				++prog_bar.progress;
 
 			pair<pair<int, int>, int> t = *i;
 			int frmean = 0;
@@ -165,6 +160,8 @@ public:
 					++fhits;
 			}
 		}
+
+		prog_bar.progress_end();
 
 		std::cout << endl;
 		for (auto i = 1; i <= 4; ++i)
