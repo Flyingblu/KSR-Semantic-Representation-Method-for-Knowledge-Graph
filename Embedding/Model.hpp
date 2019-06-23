@@ -3,6 +3,8 @@
 #include "ModelConfig.hpp"
 #include "DataModel.hpp"
 #include "../RDF_parser/progress_bar.hpp"
+#include <thread>
+
 
 using namespace std;
 using namespace arma;
@@ -41,18 +43,36 @@ public:
 	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
 
 public:
-	virtual void train(bool last_time = false)
-	{
-		++epos;
 
-#pragma omp parallel for
-		for (auto i = data_model.data_train.begin(); i != data_model.data_train.end(); ++i)
-		{
-			train_triplet(*i);
+	virtual void train_batch(unsigned int start, unsigned int length) {
+		unsigned int end = start + length;
+		for (auto i = start; i < end; ++i) {
+			train_triplet(data_model.data_train[i]);
 		}
 	}
 
-	void run(int total_epos)
+	virtual void train(int parallel_thread = 1)
+	{
+		++epos;
+
+		unsigned int num_each_thread = data_model.data_train.size() / parallel_thread;
+		thread* threads[parallel_thread];
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			if (i == parallel_thread - 1) {
+				threads[i] = new thread(this->train_batch, i * num_each_thread, data_model.data_train.size() - i * num_each_thread);
+				continue;
+			}
+			threads[i] = new thread(this->train_batch, i * num_each_thread, num_each_thread);
+		}
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			threads[i]->join();
+			delete threads[i];
+		}
+	}
+
+	void run(int total_epos, int parallel_thread)
 	{
 		logging.record() << "\t[Epos]\t" << total_epos;
 
@@ -62,9 +82,9 @@ public:
 		while (total_epos-- > 0)
 		{
 			++prog_bar.progress;
-			train();
+			train(parallel_thread);
 		}
-		train(true);
+		train(parallel_thread);
 		prog_bar.progress_end();
 	}
 
@@ -93,7 +113,7 @@ public:
 			++arr_total[data_model.relation_type[i->second]];
 		}
 
-		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size();
+		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size());
 		prog_bar.progress_begin();
 
 #pragma omp parallel for
