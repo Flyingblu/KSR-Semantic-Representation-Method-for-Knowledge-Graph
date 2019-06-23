@@ -8,6 +8,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cctype>
+#include <mutex>
 
 class SFactorE
 {
@@ -111,6 +112,8 @@ class MFactorE
 protected:
 	vector<SFactorE *> factors;
 	vector<vec> relation_space;
+	vector<mutex *> factors_mtx;
+	mutex acc_space_mtx;
 
 protected:
 	vector<vec> acc_space;
@@ -151,6 +154,16 @@ public:
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			factors.push_back(new SFactorE(dim, count_entity(), count_relation(), sigma));
+			factors_mtx.push_back(new mutex());
+		}
+	}
+
+	~MFactorE() {
+		for (auto i = factors.begin(); i != factors.end(); ++i) {
+			delete *i;
+		}
+		for (auto i = factors_mtx.begin(); i != factors_mtx.end(); ++i) {
+			delete *i;
 		}
 	}
 
@@ -187,7 +200,7 @@ public:
 	{
 		return sum(get_error_vec(triplet) % relation_space[triplet.second]);
 	}
-
+	
 public:
 	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
 	{
@@ -202,14 +215,18 @@ public:
 
 		for (auto i = 0; i < n_factor; ++i)
 		{
+			factors_mtx[i]->lock();
 			factors[i]->train(triplet, n_factor * alpha * relation_space[triplet.second][i]);
 			factors[i]->train(triplet_f, -n_factor * alpha * relation_space[triplet.second][i]);
+			factors_mtx[i]->unlock();
 		}
 
+		acc_space_mtx.lock();
 		acc_space[triplet.second] += err;
+		acc_space_mtx.unlock();
 	}
 
-	virtual void train(bool last_time = false) override
+	virtual void train(int parallel_thread) override
 	{
 		acc_space.resize(count_relation());
 		for (vec &elem : acc_space)
@@ -217,7 +234,7 @@ public:
 			elem = zeros(n_factor);
 		}
 
-		Model::train(last_time);
+		Model::train(parallel_thread);
 
 		for (auto i = 0; i < count_relation(); ++i)
 		{

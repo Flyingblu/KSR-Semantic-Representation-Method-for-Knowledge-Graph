@@ -2,7 +2,9 @@
 #include "Import.hpp"
 #include "ModelConfig.hpp"
 #include "DataModel.hpp"
-#include <boost/progress.hpp>
+#include "../RDF_parser/progress_bar.hpp"
+#include <thread>
+
 
 using namespace std;
 using namespace arma;
@@ -23,7 +25,7 @@ public:
 public:
 	Model(const Dataset &dataset,
 		  const TaskType &task_type,
-		  const string &logging_base_path
+		  const string &logging_base_path, 
 		  const bool do_load_testing)
 		: data_model(*(new DataModel(dataset, do_load_testing))), task_type(task_type),
 		  logging(*(new ModelLogging(logging_base_path))),
@@ -36,59 +38,54 @@ public:
 		logging.record() << TaskTypeName(task_type);
 	}
 
-	Model(const Dataset &dataset,
-		  const string &file_zero_shot,
-		  const TaskType &task_type,
-		  const string &logging_base_path)
-		: data_model(*(new DataModel(dataset))), task_type(task_type),
-		  logging(*(new ModelLogging(logging_base_path))),
-		  be_deleted_data_model(true)
-	{
-		epos = 0;
-		std::cout << "Ready" << endl;
-
-		logging.record() << "\t[Dataset]\t" << dataset.name;
-		logging.record() << TaskTypeName(task_type);
-	}
-
-	Model(const DataModel *data_model,
-		  const TaskType &task_type,
-		  ModelLogging *logging)
-		: data_model(*data_model), logging(*logging), task_type(task_type),
-		  be_deleted_data_model(false)
-	{
-		epos = 0;
-	}
-
 public:
 	virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
 	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
 
 public:
-	virtual void train(bool last_time = false)
-	{
-		++epos;
 
-#pragma omp parallel for
-		for (auto i = data_model.data_train.begin(); i != data_model.data_train.end(); ++i)
-		{
-			train_triplet(*i);
+	virtual void train_batch(unsigned int start, unsigned int length) {
+		unsigned int end = start + length;
+		for (auto i = start; i < end; ++i) {
+			train_triplet(data_model.data_train[i]);
 		}
 	}
 
-	void run(int total_epos)
+	virtual void train(int parallel_thread = 1)
+	{
+		++epos;
+
+		unsigned int num_each_thread = data_model.data_train.size() / parallel_thread;
+		thread* threads[parallel_thread];
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			if (i == parallel_thread - 1) {
+				threads[i] = new thread(this->train_batch, i * num_each_thread, data_model.data_train.size() - i * num_each_thread);
+				continue;
+			}
+			threads[i] = new thread(this->train_batch, i * num_each_thread, num_each_thread);
+		}
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			threads[i]->join();
+			delete threads[i];
+		}
+	}
+
+	void run(int total_epos, int parallel_thread)
 	{
 		logging.record() << "\t[Epos]\t" << total_epos;
 
 		--total_epos;
-		boost::progress_display cons_bar(total_epos);
+		ProgressBar prog_bar("Training", total_epos);
+		prog_bar.progress_begin();
 		while (total_epos-- > 0)
 		{
-			++cons_bar;
-			train();
+			++prog_bar.progress;
+			train(parallel_thread);
 		}
-
-		train(true);
+		train(parallel_thread);
+		prog_bar.progress_end();
 	}
 
 public:
@@ -116,18 +113,13 @@ public:
 			++arr_total[data_model.relation_type[i->second]];
 		}
 
-		int cnt = 0;
-
-		boost::progress_display cons_bar(data_model.data_test_true.size() / 100);
+		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size());
+		prog_bar.progress_begin();
 
 #pragma omp parallel for
 		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
 		{
-			++cnt;
-			if (cnt % 100 == 0)
-			{
-				++cons_bar;
-			}
+				++prog_bar.progress;
 
 			pair<pair<int, int>, int> t = *i;
 			int frmean = 0;
@@ -188,6 +180,8 @@ public:
 					++fhits;
 			}
 		}
+
+		prog_bar.progress_end();
 
 		std::cout << endl;
 		for (auto i = 1; i <= 4; ++i)
