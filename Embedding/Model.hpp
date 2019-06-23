@@ -60,10 +60,10 @@ public:
 
 		for (auto i = 0; i < parallel_thread; ++i) {
 			if (i == parallel_thread - 1) {
-				threads[i] = new thread(this->train_batch, i * num_each_thread, data_model.data_train.size() - i * num_each_thread);
+				threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, data_model.data_train.size() - i * num_each_thread);
 				continue;
 			}
-			threads[i] = new thread(this->train_batch, i * num_each_thread, num_each_thread);
+			threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, num_each_thread);
 		}
 
 		for (auto i = 0; i < parallel_thread; ++i) {
