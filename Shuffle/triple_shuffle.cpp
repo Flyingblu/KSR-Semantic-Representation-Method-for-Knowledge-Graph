@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-#include "./RDF_parser/progress_bar.hpp"
+#include "../RDF_parser/progress_bar.hpp"
 using namespace std;
 
 void triple_shuffle::load()
