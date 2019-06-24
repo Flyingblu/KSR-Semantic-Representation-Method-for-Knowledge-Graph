@@ -181,7 +181,7 @@ void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
     }
     size_t vector_size = bad_ent.size();
     ProgressBar pbar("serializing bad entities to binary ...", vector_size);
-    pbar.progress_begin()
+    pbar.progress_begin();
     writer.write((char*)& vector_size, sizeof(size_t));
     for (auto i = bad_ent.begin(); i != bad_ent.end(); ++i)
     {
@@ -189,7 +189,7 @@ void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
         ++pbar.progress;
     }
 
-    writer.close()
+    writer.close();
     pbar.progress_end();
 }
 
