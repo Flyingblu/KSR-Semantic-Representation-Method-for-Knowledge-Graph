@@ -68,12 +68,19 @@ void cluster::join(unsigned int idl, unsigned int idr)
     }
 
 }
-void cluster::logging(bool log_entities, bool ordered)
+void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool log_Vector_serializaed)
 {
-    log_cluster();
-    if (log_entities)
+    if (log_Cluster)
+    {
+        log_cluster();
+    }
+    if (log_Entities)
     {
         log_entities_fre(ordered);
+    }
+    if (log_Vector_serializaed)
+    {
+        vector_serializer(cunt_entities, save_path + "_less5.data", [](Entities src){return src.cunt_entities <= 5;});
     }
     return;
 }
@@ -157,6 +164,35 @@ void cluster::log_entities_fre(bool ordered)
     writer_1 << "number of entites which fre less than 5 :" << total;
     writer_1.close();
 }
+
+template <class T, typename Proc>
+void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
+{
+    ofstream writer(save_path, ios::binary);
+    vector<T> bad_ent;
+    bad_ent.reserve(vec.size());
+    cout << "filtering entitis that fre less than 5 ..." << endl;
+    for (auto i = vec.begin(); i != vec.end(); ++i)
+    {
+        if (p((*i)))
+        {
+            bad_ent.push_back((*i));
+        }
+    }
+    size_t vector_size = bad_ent.size();
+    ProgressBar pbar("serializing bad entities to binary ...", vector_size);
+    pbar.progress_begin()
+    writer.write((char*)& vector_size, sizeof(size_t));
+    for (auto i = bad_ent.begin(); i != bad_ent.end(); ++i)
+    {
+        writer.write((char*)& (*i).id, sizeof(unsigned int));
+        ++pbar.progress;
+    }
+
+    writer.close()
+    pbar.progress_end();
+}
+
 vector<unsigned int> cluster::getunionset()
 {
     return us;
@@ -165,4 +201,63 @@ vector<unsigned int> cluster::getunionset()
 vector<unsigned int> cluster::getuscount()
 {
     return cunt;
+}
+
+
+void data_filter::load()
+{
+    ifstream tri_read(load_path_triples, ios::binary);
+    ifstream ent_read(load_path_entites, ios::binary);
+    size_t set_size;
+    ent_read.read((char*)& set_size, sizeof(size_t));
+    ProgressBar pbar("entities deserialize ...", set_size);
+    pbar.progress_begin();
+    for (pbar.progress = 0; pbar.progress < set_size; ++pbar.progress)
+    {
+        unsigned int id;
+        ent_read.read((char*)& id, sizeof(unsigned int));
+        bad_ent.insert(id);
+    }
+    pbar.progress_end();
+
+    size_t vector_size;
+    tri_read.read((char *)&vector_size, sizeof(size_t));
+    ProgressBar prog_bar("Deserializing binary file to triples:", vector_size);
+    prog_bar.progress_begin();
+
+    for(prog_bar.progress = 0; prog_bar.progress < vector_size && tri_read; ++prog_bar.progress) {
+
+        unsigned int tri_arr[3];
+        tri_read.read((char *)tri_arr, sizeof(unsigned int) * 3);
+        if (bad_ent.find(tri_arr[0]) != bad_ent.end() || bad_ent.find(tri_arr[1]) != bad_ent.end() || bad_ent.find(tri_arr[2]) != bad_ent.end())
+        {
+            continue;
+        }
+        else
+        {
+            triples.push_back(make_tuple(tri_arr[0], tri_arr[1], tri_arr[2]));
+        }
+    }
+    tri_read.close();
+    prog_bar.progress_end();
+}
+
+void data_filter::log()
+{
+    ofstream writer(save_path + "_filtered", ios::binary);
+    ProgressBar prog_bar("Serializing triples to binary file:", triples.size(), log_path);
+    prog_bar.progress_begin();
+    
+    size_t vector_size = triples.size();
+    writer.write((char *)&vector_size, sizeof(size_t));
+
+    for(auto i = triples.begin(); i != triples.end(); ++i) {
+
+        unsigned int tri_arr[3] = {get<0>(*i), get<1>(*i), get<2>(*i)};
+        writer.write((char *)tri_arr, sizeof(unsigned int) * 3);
+
+        prog_bar.progress += 1;
+    }
+    writer.close();
+    prog_bar.progress_end();
 }

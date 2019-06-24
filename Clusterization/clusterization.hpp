@@ -6,6 +6,7 @@
 #include <set>
 #include <fstream>
 #include <iostream>
+#include <tuple>
 using namespace std;
 
 class Entities
@@ -44,9 +45,11 @@ class cluster
             delete this->reader;
         };
         void clusterizing();    
-        void logging(bool, bool);
+        void logging(bool, bool, bool, bool);
         void log_cluster();
         void log_entities_fre(bool);
+        template <class T, typename Proc>
+        void vector_serializer(vector<T>& vec, string save_path, Proc p);
         vector<unsigned int> getunionset();
         vector<unsigned int> getuscount();
         
@@ -60,5 +63,26 @@ class cluster
         string save_path; 
         unsigned int find(unsigned int id);
         void join(unsigned int idl, unsigned int idr);
+};
+
+//delete all triples containing entites whose frequency are less or equal to 5
+class data_filter
+{
+    public:
+        data_filter();
+        data_filter(string load_path_of_triples, string load_path_of_entites, string save_path):
+        load_path_triples(load_path_of_triples), 
+        load_path_entites(load_path_of_entites),
+        save_path(save_path)
+        {};
+        void load();
+        void log();
+    private:
+        string load_path_triples;
+        string load_path_entites;
+        string save_path;
+        vector<tuple<unsigned int, unsigned int, unsigned int>> triples;
+        set<unsigned int> bad_ent //entities less than 5
+
 };
 #endif
