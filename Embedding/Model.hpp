@@ -192,7 +192,7 @@ public:
 
 		for (auto i = 0; i < parallel_thread; ++i) {
 			if (i == parallel_thread - 1) {
-				threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, data_model.data_train.size() - i * num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
+				threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, data_model.data_test_true.size() - i * num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
 				continue;
 			}
 			threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
