@@ -13,6 +13,7 @@ int main()
     TaskType task = General;
     MFactorE model(data, task, "/home/anabur/Github/logs/training_log/", 10, 0.01, 0.1, 0.01, 10, false);
     model.run(10000, 39);
-    model.test_link_prediction();
+	model.save("/home/anabur/data/model/latest-lexemes.model");
+    model.test_link_prediction(10, 0, 39);
     return 0;
 }
