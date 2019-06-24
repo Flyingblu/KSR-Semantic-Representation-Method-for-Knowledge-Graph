@@ -4,6 +4,7 @@
 #include "DataModel.hpp"
 #include "../RDF_parser/progress_bar.hpp"
 #include <thread>
+#include <mutex>
 
 
 using namespace std;
@@ -44,9 +45,9 @@ public:
 
 public:
 
-	virtual void train_batch(unsigned int start, unsigned int length) {
-		unsigned int end = start + length;
-		for (auto i = start; i < end; ++i) {
+	virtual void train_batch(size_t start, size_t length) {
+		size_t end = start + length;
+		for (size_t i = start; i < end; ++i) {
 			train_triplet(data_model.data_train[i]);
 		}
 	}
@@ -55,7 +56,7 @@ public:
 	{
 		++epos;
 
-		unsigned int num_each_thread = data_model.data_train.size() / parallel_thread;
+		size_t num_each_thread = data_model.data_train.size() / parallel_thread;
 		thread* threads[parallel_thread];
 
 		for (auto i = 0; i < parallel_thread; ++i) {
@@ -95,36 +96,17 @@ public:
 	double		best_link_fmean;
 	double		best_link_fhitatten;
 
-	void test_link_prediction(int hit_rank = 10, const int part = 0)
-	{
-		double mean = 0;
-		double hits = 0;
-		double fmean = 0;
-		double fhits = 0;
-		double rmrr = 0;
-		double fmrr = 0;
-		double total = data_model.data_test_true.size();
+	void test_batch(size_t start, size_t length, vector<double>& result, int hit_rank, const int part, long long& progress, mutex* progress_mtx) {
 
-		double arr_mean[20] = {0};
-		double arr_total[5] = {0};
+		size_t end = start + length;
 
-		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
+		for (size_t i = start; i < end; ++i)
 		{
-			++arr_total[data_model.relation_type[i->second]];
-		}
 
-		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size());
-		prog_bar.progress_begin();
-
-#pragma omp parallel for
-		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
-		{
-				++prog_bar.progress;
-
-			pair<pair<int, int>, int> t = *i;
+			pair<pair<int, int>, int> t = data_model.data_test_true[i];
 			int frmean = 0;
 			int rmean = 0;
-			double score_i = prob_triplets(*i);
+			double score_i = prob_triplets(data_model.data_test_true[i]);
 
 			if (task_type == LinkPredictionRelation || part == 2)
 			{
@@ -163,21 +145,73 @@ public:
 					}
 				}
 			}
+			if (frmean < hit_rank)
+				++result[6 + data_model.relation_type[data_model.data_test_true[i].second]];
 
-#pragma omp critical
-			{
-				if (frmean < hit_rank)
-					++arr_mean[data_model.relation_type[i->second]];
+			result[0] += rmean;
+			result[2] += frmean;
+			result[4] += 1.0 / (rmean + 1);
+			result[5] += 1.0 / (frmean + 1);
 
-				mean += rmean;
-				fmean += frmean;
-				rmrr += 1.0 / (rmean + 1);
-				fmrr += 1.0 / (frmean + 1);
+			if (rmean < hit_rank)
+				++result[1];
+			if (frmean < hit_rank)
+				++result[3];
 
-				if (rmean < hit_rank)
-					++hits;
-				if (frmean < hit_rank)
-					++fhits;
+			progress_mtx->lock();
+			++progress;
+			progress_mtx->unlock();
+		}
+	}
+
+	void test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1)
+	{
+		double mean = 0;
+		double hits = 0;
+		double fmean = 0;
+		double fhits = 0;
+		double rmrr = 0;
+		double fmrr = 0;
+		double total = data_model.data_test_true.size();
+
+		double arr_mean[20] = {0};
+		double arr_total[5] = {0};
+
+		vector<vector<double> > thread_data(parallel_thread, vector<double>(26));
+		thread* threads[parallel_thread];
+		size_t num_each_thread = data_model.data_test_true.size() / parallel_thread;
+
+		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
+		{
+			++arr_total[data_model.relation_type[i->second]];
+		}
+
+		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size());
+		mutex* progress_mtx = new mutex();
+		prog_bar.progress_begin();
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			if (i == parallel_thread - 1) {
+				threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, data_model.data_train.size() - i * num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
+				continue;
+			}
+			threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
+		}
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			threads[i]->join();
+			delete threads[i];
+		}
+
+		for (auto i = 0; i < parallel_thread; ++i) {
+			mean += thread_data[i][0];
+			hits += thread_data[i][1];
+			fmean += thread_data[i][2];
+			fhits += thread_data[i][3];
+			rmrr += thread_data[i][4];
+			fmrr += thread_data[i][5];
+			for (auto j = 0; j < 20; ++j) {
+				arr_mean[j] += thread_data[i][6 + j];
 			}
 		}
 
