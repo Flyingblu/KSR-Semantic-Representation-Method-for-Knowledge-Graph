@@ -80,7 +80,7 @@ void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool lo
     }
     if (log_Vector_serializaed)
     {
-        vector_serializer(cunt_entities, save_path + "_less5.data", [](Entities src){return src.cunt_entities <= 5;});
+        vector_serializer(cunt_entities, save_path + "entities_less5.data", [](Entities src){return src.cunt_entities <= 5;});
     }
     return;
 }
@@ -115,8 +115,8 @@ void cluster::log_cluster()
 void cluster::log_entities_fre(bool ordered)
 {
     cout << "log_entities_fre ... " << endl;
-    ofstream writer(save_path + "_cunt_e");
-    ofstream writer_1(save_path + "_less5");
+    ofstream writer(save_path + "Clusterization_cunt_e");
+    ofstream writer_1(save_path + "Clustrization_less5");
     
     size_t vector_size = cunt_entities.size();
     unsigned int count = 0; 
@@ -130,7 +130,7 @@ void cluster::log_entities_fre(bool ordered)
         sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.id < des.id;});
         ProgressBar pbar("ordered cunt entities_fre", vector_size);
         pbar.progress_begin();
-        ofstream writer_2(save_path + "_cunt_e_o");
+        ofstream writer_2(save_path + "Clusterization_cunt_e_o");
         for (int i = 0; i < vector_size; ++i)
         {   
             count++;
@@ -244,8 +244,8 @@ void data_filter::load()
 
 void data_filter::log()
 {
-    ofstream writer(save_path + "_filtered", ios::binary);
-    ProgressBar prog_bar("Serializing triples to binary file:", triples.size(), log_path);
+    ofstream writer(save_path + "triples_filtered", ios::binary);
+    ProgressBar prog_bar("Serializing triples to binary file:", triples.size());
     prog_bar.progress_begin();
     
     size_t vector_size = triples.size();

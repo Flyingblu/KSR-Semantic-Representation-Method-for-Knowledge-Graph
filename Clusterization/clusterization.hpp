@@ -82,7 +82,7 @@ class data_filter
         string load_path_entites;
         string save_path;
         vector<tuple<unsigned int, unsigned int, unsigned int>> triples;
-        set<unsigned int> bad_ent //entities less than 5
+        set<unsigned int> bad_ent; //entities less than 5
 
 };
 #endif
