@@ -25,7 +25,7 @@ class cluster
                 reader(new ifstream(read_path, ios::binary)), 
                 save_path(save_path), 
                 cunt(reserve_num, 1){
-
+                    
             cout << "Initializing ... " << endl;
             us.reserve(reserve_num);
             for (int i = 0; i < reserve_num; ++i)
