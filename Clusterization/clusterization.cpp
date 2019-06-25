@@ -16,9 +16,9 @@ void cluster::clusterizing()
         {
             unsigned int tri_arr[3];
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
-            ++cunt_entities[tri_arr[0]].cunt_entities;
-            ++cunt_entities[tri_arr[2]].cunt_entities;
-            //join(tri_arr[0], tri_arr[2]);
+            //++cunt_entities[tri_arr[0]].cunt_entities;
+            //++cunt_entities[tri_arr[2]].cunt_entities;
+            join(tri_arr[0], tri_arr[2]);
             ++pbar.progress;
         }
         pbar.progress_end();
