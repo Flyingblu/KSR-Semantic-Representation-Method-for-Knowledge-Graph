@@ -187,7 +187,7 @@ void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
     ProgressBar pbar("serializing entities to binary ...", vector_size);
     pbar.progress_begin();
     writer.write((char*)& vector_size, sizeof(size_t));
-    for (auto i = bad_ent.begin(); i != bad_ent.end(); ++i)
+    for (auto i = ent.begin(); i != ent.end(); ++i)
     {
         writer.write((char*)& (*i).id, sizeof(unsigned int));
         ++pbar.progress;
