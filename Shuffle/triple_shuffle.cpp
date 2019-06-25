@@ -43,7 +43,7 @@ void triple_shuffle::Shuffle()
 
 void triple_shuffle::log()
 {
-    ofstream file(save_path + "_shuffled", ios::binary);
+    ofstream file(save_path + "_shuffled.data", ios::binary);
     ProgressBar prog_bar("Serializing triples to binary file:", triples.size());
     prog_bar.progress_begin();
     

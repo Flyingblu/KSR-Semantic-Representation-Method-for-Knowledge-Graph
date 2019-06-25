@@ -1,5 +1,6 @@
 #include "clusterization.hpp"
 #include "../RDF_parser/progress_bar.hpp"
+#include <boost/progress.hpp>
 #include <algorithm>
 #include <iostream>
 using namespace std;
@@ -10,8 +11,9 @@ void cluster::clusterizing()
     {
         size_t vector_size;
         (*this->reader).read((char *)& vector_size, sizeof(size_t));
-        ProgressBar pbar("clusterzing ...", vector_size);
-        pbar.progress_begin();
+        //ProgressBar pbar("clusterzing ...", vector_size);
+        boost::progress_display display(vector_size);
+        //pbar.progress_begin();
         while(!(*this->reader).eof())
         {
             unsigned int tri_arr[3];
@@ -19,9 +21,10 @@ void cluster::clusterizing()
             //++cunt_entities[tri_arr[0]].cunt_entities;
             //++cunt_entities[tri_arr[2]].cunt_entities;
             join(tri_arr[0], tri_arr[2]);
-            ++pbar.progress;
+            ++display;
+           // ++pbar.progress;
         }
-        pbar.progress_end();
+        //pbar.progress_end();
     }
     else
     {
@@ -96,8 +99,9 @@ void cluster::log_cluster()
     size_t vector_size = us.size(); 
     unsigned int count = 0;
     unsigned int total = 0;
-    ProgressBar pbar("log_cluster ...", vector_size);
-    pbar.progress_begin();
+    //ProgressBar pbar("log_cluster ...", vector_size);
+    //pbar.progress_begin();
+    boost::progress_display display(vector_size);
     for (int i = 0; i < vector_size; ++i)
     {
         
@@ -108,9 +112,10 @@ void cluster::log_cluster()
 
             total += cunt[i];
         }
-        ++pbar.progress;
+        ++display;
+        //++pbar.progress;
     }
-    pbar.progress_end();
+    //pbar.progress_end();
     writer << "total : " << total;
     writer.close();
 
