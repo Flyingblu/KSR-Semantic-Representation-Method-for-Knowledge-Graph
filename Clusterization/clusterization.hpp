@@ -30,13 +30,13 @@ class cluster
             us.reserve(reserve_num);
             for (int i = 0; i < reserve_num; ++i)
             {
-                us[i] = i;
+                us.push_back(i);
             }
             cunt_entities.reserve(reserve_num);
             for (unsigned int i = 0; i < reserve_num; ++i) 
             {
                 Entities entities(i);
-                cunt_entities[i] = entities;
+                cunt_entities.push_back(entities);
             }
             
         };
