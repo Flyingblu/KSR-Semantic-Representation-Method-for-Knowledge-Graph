@@ -52,8 +52,8 @@ class cluster
         void log_entities_fre(bool);
         template <class T, typename Proc>
         void vector_serializer(vector<T>& vec, string save_path, Proc p);
-        vector<unsigned int> getunionset();
-        vector<unsigned int> getuscount();
+        unordered_map<unsigned int, unsigned int> getunionset();
+        unordered_map<unsigned int, unsigned int> getuscount();
         
 
     private:
