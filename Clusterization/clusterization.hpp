@@ -29,7 +29,7 @@ class cluster
             cout << "Initializing ... " << endl;
             ifstream file(entities_path, ios::binary);
             us.reserve(reserve_num);
-            cunt_entities.reserve(reserve_num);
+            //cunt_entities.reserve(reserve_num);
             size_t map_size;
             file.read((char*)& map_size, sizeof(size_t));
             for (int i = 0; i < map_size; ++i)
@@ -39,7 +39,7 @@ class cluster
                 us[entities_id] = entities_id;
                 cunt[entities_id] = 1;
                 Entities entities(entities_id);
-                cunt_entities[entities_id] = entities;
+                //cunt_entities[entities_id] = entities;
             }
         };
         ~cluster()
@@ -49,6 +49,7 @@ class cluster
         void clusterizing();    
         void logging(bool, bool, bool, bool, bool);
         void log_cluster();
+        void cluster_connect();
         template <class T, typename Proc>
         void vector_serializer(vector<T>& vec, string save_path, Proc p);
         unordered_map<unsigned int, unsigned int> getunionset();
@@ -59,8 +60,8 @@ class cluster
         ifstream* reader;
         unordered_map<unsigned int, unsigned int> us;
         unordered_map<unsigned int, unsigned int> cunt;
-        unordered_map<unsigned int, Entities> cunt_entities;
-        //vector<vector<unsigned int>> connect;
+        //unordered_map<unsigned int, Entities> cunt_entities;
+        unordered_map<unsigned int, unordered_map<unsigned int, unsigned int>> connect; 
         string save_path; 
         unsigned int find(unsigned int id);
         void join(unsigned int idl, unsigned int idr);

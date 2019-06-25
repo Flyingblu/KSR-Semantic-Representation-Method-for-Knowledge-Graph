@@ -19,7 +19,10 @@ void cluster::clusterizing()
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
             //++cunt_entities[tri_arr[0]].cunt_entities;
             //++cunt_entities[tri_arr[2]].cunt_entities;
-            join(tri_arr[0], tri_arr[2]);
+            unsigned int fidl = find(tri_arr[0]);
+            unsigned int fidr = find(tri_arr[2]);
+            if (cunt[fidl] > 5000000 || cunt[fidr] > 5000000)
+            join(fidl, fidr);
             ++pbar.progress;
         }
         pbar.progress_end();
@@ -46,8 +49,6 @@ void cluster::join(unsigned int idl, unsigned int idr)
 {   unsigned int fidl = find(us[idl]);
     unsigned int fidr = find(us[idr]);
     if (fidl == fidr)
-        return;
-    else if (cunt[fidl] > 5000000 || cunt[fidr] > 5000000)
         return;
     else if (cunt[fidl] > cunt[fidr])   
     {
@@ -117,8 +118,6 @@ void cluster::log_cluster()
     writer.close();
 
 }
-
-
 
 template <class T, typename Proc>
 void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
