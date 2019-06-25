@@ -3,7 +3,7 @@
 #include <fstream>
 int main()
 {
-    cluster* c = new cluster("/PATH/TO/TRIPLE.DATA", "/PATH/TO/LOGFILE", ENTITIES_SIZE);
+    cluster* c = new cluster("/PATH/TO/TRIPLE.DATA", "/PATH/TO/ENTITIES.DATA", "/PATH/TO/LOGFILE", ENTITIES_SIZE);
     c->clusterizing();
     c->logging(false, false, false, false, true);
     delete c;

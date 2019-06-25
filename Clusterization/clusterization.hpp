@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <tuple>
+#include <unordered_map>
 using namespace std;
 
 class Entities
@@ -21,24 +22,25 @@ class Entities
 class cluster
 {
     public:
-        cluster(string read_path, string save_path, unsigned int reserve_num): 
+        cluster(string read_path, string entities_path, string save_path, unsigned int reserve_num): 
                 reader(new ifstream(read_path, ios::binary)), 
-                save_path(save_path), 
-                cunt(reserve_num, 1){
-                    
+                save_path(save_path){
+
             cout << "Initializing ... " << endl;
+            ifstream file(entities_path, ios::binary);
             us.reserve(reserve_num);
-            for (int i = 0; i < reserve_num; ++i)
-            {
-                us.push_back(i);
-            }
             cunt_entities.reserve(reserve_num);
-            for (unsigned int i = 0; i < reserve_num; ++i) 
+            size_t map_size;
+            file.read((char*)& map_size, sizeof(size_t));
+            for (int i = 0; i < map_size; ++i)
             {
-                Entities entities(i);
-                cunt_entities.push_back(entities);
+                unsigned int entities_id;
+                file.read((char*)& entities_id, sizeof(unsigned int));
+                us[entities_id] = entities_id;
+                cunt[entities_id] = 1;
+                Entities entities(entities_id);
+                cunt_entities[entities_id] = entities;
             }
-            
         };
         ~cluster()
         {
@@ -56,9 +58,9 @@ class cluster
 
     private:
         ifstream* reader;
-        vector<unsigned int> us;
-        vector<unsigned int> cunt;
-        vector<Entities> cunt_entities;
+        unordered_map<unsigned int, unsigned int> us;
+        unordered_map<unsigned int, unsigned int> cunt;
+        unordered_map<unsigned int, Entities> cunt_entities;
         //vector<vector<unsigned int>> connect;
         string save_path; 
         unsigned int find(unsigned int id);
