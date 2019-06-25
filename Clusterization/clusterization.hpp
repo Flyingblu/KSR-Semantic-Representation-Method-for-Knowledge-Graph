@@ -49,7 +49,6 @@ class cluster
         void clusterizing();    
         void logging(bool, bool, bool, bool, bool);
         void log_cluster();
-        void log_entities_fre(bool);
         template <class T, typename Proc>
         void vector_serializer(vector<T>& vec, string save_path, Proc p);
         unordered_map<unsigned int, unsigned int> getunionset();

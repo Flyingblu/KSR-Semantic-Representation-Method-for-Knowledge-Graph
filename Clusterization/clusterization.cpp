@@ -77,9 +77,9 @@ void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool lo
     }
     if (log_Entities)
     {
-        log_entities_fre(ordered);
     }
-    if (log_Vector_serialized_l5)
+
+    /*if (log_Vector_serialized_l5)
     {
         vector_serializer(cunt_entities, save_path + "entities_less5.data", [](Entities src){return src.cunt_entities <= 5;});
     }
@@ -87,6 +87,7 @@ void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool lo
     {
         vector_serializer(cunt_entities, save_path + "entities_more5.data", [](Entities src){return src.cunt_entities > 5;});
     }
+    */
     return;
 }
 
@@ -99,17 +100,16 @@ void cluster::log_cluster()
     unsigned int total = 0;
     ProgressBar pbar("log_cluster ...", map_size);
     pbar.progress_begin();
-    for (int i = 0; i < map_size; ++i)
+    for (auto i = us.begin(); i != us.end(); ++i)
     {
         
-        if (find(i) == i)
+        if ((*i).first == (*i).second)
         {
             count++;
-            writer << count << "th cluster :  id : " << i << "\t" << "num_entities :" << cunt[i] << endl;
+            writer << count << "th cluster :  id : " << (*i).first << "\t" << "num_entities :" << cunt[(*i).first] << endl;
 
-            total += cunt[i];
+            total += cunt[(*i).first];
         }
-        ++display;
         ++pbar.progress;
     }
     pbar.progress_end();
@@ -118,58 +118,7 @@ void cluster::log_cluster()
 
 }
 
-void cluster::log_entities_fre(bool ordered)
-{
-    cout << "log_entities_fre ... " << endl;
-    ofstream writer(save_path + "Clusterization_cunt_e");
-    ofstream writer_1(save_path + "Clustrization_less5");
-    
-    size_t map_size = cunt_entities.size();
-    unsigned int count = 0; 
-    unsigned int total = 0; // count of entites's fre lower than 5
 
-    
-    
-    if (ordered)
-    {
-        cout << "sorting based on id";
-        sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.id < des.id;});
-        ProgressBar pbar("ordered cunt entities_fre", map_size);
-        pbar.progress_begin();
-        ofstream writer_2(save_path + "Clusterization_cunt_e_o");
-        for (int i = 0; i < map_size; ++i)
-        {   
-            count++;
-            writer_2 << count << "th cluster : id : " << cunt_entities[i].id << "\t frequency " << cunt_entities[i].cunt_entities << endl;
-            ++pbar.progress;
-        }
-        pbar.progress_end();
-        writer_2.close();
-    }
-
-    cout << "sorting base on cunt ..." << endl;
-    sort(cunt_entities.begin(), cunt_entities.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities;});
-    
-    count = 0;
-    ProgressBar pbar_1("unordered cunt entities_fre", map_size); 
-    pbar_1.progress_begin(); 
-    for (int i = 0; i < map_size; ++i)
-    {   
-        count++;
-        writer << count << "th cluster : id : " << cunt_entities[i].id << "\t frequency " << cunt_entities[i].cunt_entities << endl;
-        if (cunt_entities[i].cunt_entities <= 5)
-        {
-            ++total;
-            writer_1 << total << "th cluster id :" << cunt_entities[i].id << "\t frequency :" <<cunt_entities[i].cunt_entities << endl;
-        }
-        ++pbar_1.progress;
-    }
-    pbar_1.progress_end();
-    writer << "number of entites which fre less than 5 :" << total;
-    writer.close();
-    writer_1 << "number of entites which fre less than 5 :" << total;
-    writer_1.close();
-}
 
 template <class T, typename Proc>
 void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
@@ -199,12 +148,12 @@ void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
     pbar.progress_end();
 }
 
-unordered_map<unsigned int> cluster::getunionset()
+unordered_map<unsigned int, unsigned int> cluster::getunionset()
 {
     return us;
 }
 
-unordered_map<unsigned int> cluster::getuscount()
+unordered_map<unsigned int, unsigned int> cluster::getuscount()
 {
     return cunt;
 }
