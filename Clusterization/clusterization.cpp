@@ -18,7 +18,7 @@ void cluster::clusterizing()
             (*this->reader).read((char *)tri_arr, sizeof(unsigned int) * 3);
             ++cunt_entities[tri_arr[0]].cunt_entities;
             ++cunt_entities[tri_arr[2]].cunt_entities;
-            join(tri_arr[0], tri_arr[2]);
+            //join(tri_arr[0], tri_arr[2]);
             ++pbar.progress;
         }
         pbar.progress_end();
@@ -68,7 +68,7 @@ void cluster::join(unsigned int idl, unsigned int idr)
     }
 
 }
-void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool log_Vector_serializaed)
+void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool log_Vector_serialized_l5, bool log_Vector_serialized_m5)
 {
     if (log_Cluster)
     {
@@ -78,9 +78,13 @@ void cluster::logging(bool log_Cluster, bool log_Entities, bool ordered, bool lo
     {
         log_entities_fre(ordered);
     }
-    if (log_Vector_serializaed)
+    if (log_Vector_serialized_l5)
     {
         vector_serializer(cunt_entities, save_path + "entities_less5.data", [](Entities src){return src.cunt_entities <= 5;});
+    }
+    if(log_Vector_serialized_m5)
+    {
+        vector_serializer(cunt_entities, save_path + "entities_more5.data", [](Entities src){return src.cunt_entities > 5;});
     }
     return;
 }
@@ -169,18 +173,18 @@ template <class T, typename Proc>
 void cluster::vector_serializer(vector<T>& vec, string save_path, Proc p)
 {
     ofstream writer(save_path, ios::binary);
-    vector<T> bad_ent;
-    bad_ent.reserve(vec.size());
+    vector<T> ent;
+    ent.reserve(vec.size());
     cout << "filtering entitis that fre less than 5 ..." << endl;
     for (auto i = vec.begin(); i != vec.end(); ++i)
     {
         if (p((*i)))
         {
-            bad_ent.push_back((*i));
+            ent.push_back((*i));
         }
     }
-    size_t vector_size = bad_ent.size();
-    ProgressBar pbar("serializing bad entities to binary ...", vector_size);
+    size_t vector_size = ent.size();
+    ProgressBar pbar("serializing entities to binary ...", vector_size);
     pbar.progress_begin();
     writer.write((char*)& vector_size, sizeof(size_t));
     for (auto i = bad_ent.begin(); i != bad_ent.end(); ++i)

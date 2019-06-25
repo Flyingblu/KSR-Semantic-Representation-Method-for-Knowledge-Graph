@@ -45,7 +45,7 @@ class cluster
             delete this->reader;
         };
         void clusterizing();    
-        void logging(bool, bool, bool, bool);
+        void logging(bool, bool, bool, bool, bool);
         void log_cluster();
         void log_entities_fre(bool);
         template <class T, typename Proc>
