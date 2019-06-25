@@ -27,12 +27,12 @@ class cluster
                 cunt(reserve_num, 1){
 
             cout << "Initializing ... " << endl;
-            us.resize(reserve_num);
+            us.reserve(reserve_num);
             for (int i = 0; i < reserve_num; ++i)
             {
                 us[i] = i;
             }
-            cunt_entities.resize(reserve_num);
+            cunt_entities.reserve(reserve_num);
             for (unsigned int i = 0; i < reserve_num; ++i) 
             {
                 Entities entities(i);
@@ -58,7 +58,7 @@ class cluster
         ifstream* reader;
         vector<unsigned int> us;
         vector<unsigned int> cunt;
-        //vector<Entities> cunt_entities;
+        vector<Entities> cunt_entities;
         //vector<vector<unsigned int>> connect;
         string save_path; 
         unsigned int find(unsigned int id);
