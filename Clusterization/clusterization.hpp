@@ -38,7 +38,7 @@ class cluster
                 file.read((char*)& entities_id, sizeof(unsigned int));
                 us[entities_id] = entities_id;
                 cunt[entities_id] = 1;
-                Entities entities(entities_id);
+                //Entities entities(entities_id);
                 //cunt_entities[entities_id] = entities;
             }
         };
@@ -49,6 +49,7 @@ class cluster
         void clusterizing();    
         void logging(bool, bool, bool, bool, bool);
         void log_cluster();
+        void log_cluster_sorted();
         void cluster_connect();
         template <class T, typename Proc>
         void vector_serializer(vector<T>& vec, string save_path, Proc p);

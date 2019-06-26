@@ -1,9 +1,9 @@
 #include "clusterization.hpp"
 #include "../RDF_parser/progress_bar.hpp"
-#include <boost/progress.hpp>
 #include <algorithm>
 #include <iostream>
 using namespace std;
+
 
 void cluster::clusterizing()
 {
@@ -21,11 +21,15 @@ void cluster::clusterizing()
             //++cunt_entities[tri_arr[2]].cunt_entities;
             unsigned int fidl = find(tri_arr[0]);
             unsigned int fidr = find(tri_arr[2]);
-            if (cunt[fidl] > 5000000 || cunt[fidr] > 5000000)
+            if (cunt[fidl] >= 5000000 || cunt[fidr] >= 5000000)
+            {
+                break;
+            }
             join(fidl, fidr);
             ++pbar.progress;
         }
         pbar.progress_end();
+        log_cluster_sorted();
     }
     else
     {
@@ -117,6 +121,44 @@ void cluster::log_cluster()
     writer << "total : " << total;
     writer.close();
 
+}
+
+void cluster::log_cluster_sorted()
+{
+    unsigned int map_size = us.size();
+    vector<Entities> cluster_sort;
+    cluster_sort.reserve(map_size);
+    ProgressBar pbar("Transfering cluster from map to vector ...", map_size);
+    pbar.progress_begin();
+    for (auto i = us.begin(); i != us.end(); ++i)
+    {
+        ++pbar.progress;
+        if ((*i).first != (*i).second)
+        {
+            continue;
+        }
+        else
+        {
+            Entities cluster((*i).first);
+            cluster.cunt_entities = cunt[(*i).first];
+            cluster_sort.push_back(cluster);
+        }
+        
+    }
+    pbar.progress_end();
+
+    sort(cluster_sort.begin(), cluster_sort.end(), [](Entities src, Entities des){return src.cunt_entities > des.cunt_entities;});
+    ofstream writer(save_path + "_sorted_cluster");
+    unsigned int vector_size = cluster_sort.size();
+    ProgressBar prog_bar("Logging sorted_cluster ...", vector_size);
+    prog_bar.progress_begin();
+    for (int i = 0; i < vector_size; ++i)
+    {
+        writer << i + 1 << "th cluster :  id : " << cluster_sort[i].id << "\t" << "num_entities :" << cluster_sort[i].cunt_entities << endl;
+        ++prog_bar.progress;
+    }
+    prog_bar.progress_end();
+    writer.close();
 }
 
 template <class T, typename Proc>
