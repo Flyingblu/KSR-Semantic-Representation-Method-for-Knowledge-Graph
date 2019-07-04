@@ -10,6 +10,11 @@
 #include "../RDF_parser/progress_bar.hpp"
 using namespace std;
 
+struct cluster
+{
+    unsigned int id;
+    unsigned int cunt;
+};
 class k_means
 {
     public:
@@ -18,7 +23,9 @@ class k_means
         save_path(save_path),
         cluster_num(cluster_num), 
         id(significant_num, 0),
-        connection_table(significant_num, vector<unsigned int>(significant_num, 0))
+        k_means_cluster(cluster_num),
+        connection_table(significant_num, vector<unsigned int>(significant_num, 0)),
+        connection_table_new(cluster_num, vector<unsigned int>(cluster_num))
         {
             cout << "Initializing Done ..." << endl;
             
@@ -26,15 +33,16 @@ class k_means
 
         void load_id(string);
         void load_table(string);
-        void cluster();
+        void k_means_clusterizing();
         unsigned int center_point(vector<unsigned int>&);
-        void count_connection(vector<unsigned int>&, unordered_map<unsigned int, vector<unsigned int>>&);
+        void count_connection(vector<cluster>&, unordered_map<unsigned int, vector<unsigned int>>&);
         void log(string save_path);
 
     private:
         vector<unsigned int> id;
         vector<vector<unsigned int>> connection_table;
-        unordered_map<unsigned int, unordered_map<unsigned int, unsigned int>> connection_table_new;
+        vector<vector<unsigned int>> connection_table_new;
+        vector<cluster> k_means_cluster; // stored cluster_id
         unsigned int cluster_num;
         string save_path;
 };

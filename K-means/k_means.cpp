@@ -58,17 +58,17 @@ void k_means::load_table(string read_path)
     reader.close();
 }
 
-void k_means::cluster()
+void k_means::k_means_clusterizing()
 {
     unsigned int vector_size = connection_table.size();
-    vector<unsigned int> k_means_cluster(cluster_num); // stored cluster_id
+    
     unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
     vector<unsigned> Point_cluster(vector_size, -1); // stored the cluster id for each point
     bool changed = true;
 
     for (int i = 0; i < cluster_num; ++i)
     {
-        k_means_cluster[i] = i;
+        k_means_cluster[i].id = i;
     }
 
     while(changed)
@@ -79,18 +79,18 @@ void k_means::cluster()
             unsigned int min_cluster = 0;
             for (int j = 1; j < cluster_num; ++j)
             {
-                if (k_means_cluster[j] == i)
+                if (k_means_cluster[j].id == i)
                 {
                     min_cluster = j;
                     break;
                 }
-                if (connection_table[i][k_means_cluster[min_cluster]] < connection_table[i][k_means_cluster[j]])
+                if (connection_table[i][k_means_cluster[min_cluster].id] < connection_table[i][k_means_cluster[j].id])
                 {
                     min_cluster = j;
                 }
             }
             unsigned int old_cluster = Point_cluster[i];
-            Point_cluster[i] = k_means_cluster[min_cluster];
+            Point_cluster[i] = k_means_cluster[min_cluster].id;
             if (old_cluster != Point_cluster[i])
             {
                 changed = true;
@@ -105,12 +105,13 @@ void k_means::cluster()
         }
         for (int i = 0; i < cluster_num; ++i)
         {
-            unsigned int center_new = center_point(k_means_cluster_content[k_means_cluster[i]]);
-            k_means_cluster[i] = center_new;
+            unsigned int center_new = center_point(k_means_cluster_content[k_means_cluster[i].id]);
+            k_means_cluster[i].id = center_new;
         }
 
 
     }
+    count_connection(k_means_cluster, k_means_cluster_content);
 }
 
 unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
@@ -143,20 +144,26 @@ unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
     return distance_sum[0].id;
 }
 
-void k_means::count_connection(vector<unsigned int>& k_means_cluster, unordered_map<unsigned int, vector<unsigned int>>& k_means_cluster_content)
+void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<unsigned int, vector<unsigned int>>& k_means_cluster_content)
 {
     for (int i = 0; i < cluster_num; ++i)
     {
-        unsigned int i_size = k_means_cluster_content[k_means_cluster[i]].size();
+        unsigned int i_size = k_means_cluster_content[k_means_cluster[i].id].size();
+        
         for(int j = i; j < cluster_num; ++i)
         {
-            unsigned int j_size = k_means_cluster_content[k_means_cluster[j]].size();
+            unsigned int j_size = k_means_cluster_content[k_means_cluster[j].id].size();
             for (int k = 0; k < i_size; ++k)
             {
                 for(int q = 0; q < j_size; ++q)
                 {
-                    
-                    connection_table_new[i][j] += connection_table[]
+                    unsigned int point_1 = k_means_cluster_content[k_means_cluster[i].id][k];
+                    unsigned int point_2 = k_means_cluster_content[k_means_cluster[j].id][q];
+                    if (connection_table[point_1][point_2] == 0 && connection_table[point_2][point_1] != 0)
+                    {
+                        swap(point_1, point_2);
+                    }   
+                    connection_table_new[i][j] += connection_table[point_1][point_2];
                 }
             }
         }
@@ -169,4 +176,8 @@ void k_means::log(string save_path)
     ofstream writer_1(save_path +" _" + buf + "_id");
     ofstream writer_2(save_path + "_" + buf + "_connection table");
 
+    for (int i = 0; i < cluster_num; ++i)
+    {
+        writer_1 << k_means_cluster[i] << "," << ;
+    }
 }
