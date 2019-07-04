@@ -9,6 +9,7 @@ class centroid
         unsigned int id;
         unsigned int distance;
 };
+
 void k_means::load_id(string read_path)
 {
     ifstream reader(read_path);
@@ -70,6 +71,7 @@ void k_means::k_means_clusterizing()
     {
         k_means_cluster[i].id = i;
     }
+
     unsigned int round = 0;
     time_t timer = 0;
     while(changed)
@@ -178,6 +180,7 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
         }
     }
 }
+
 void k_means::log(string save_path)
 {   
     char buf[2];
@@ -196,6 +199,7 @@ void k_means::log(string save_path)
         for (int j = 0; j < cluster_num; ++j)
         {
             writer_2 << connection_table_new[i][j];
+            total += connection_table_new[i][j];
             if (j != cluster_num - 1)
             {
                 writer_2 << ",";
@@ -203,5 +207,6 @@ void k_means::log(string save_path)
         }
         writer_2 << endl;
     }
+    writer_2 << total;
     writer_2.close;
 }
