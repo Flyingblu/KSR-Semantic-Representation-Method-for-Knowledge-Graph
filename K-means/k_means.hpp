@@ -12,8 +12,8 @@ using namespace std;
 
 struct cluster
 {
-    unsigned int id;
-    unsigned int cunt;
+    unsigned int id = 0;
+    unsigned int cunt = 0;
 };
 class k_means
 {
@@ -22,7 +22,7 @@ class k_means
         k_means(string save_path, unsigned int cluster_num, unsigned int significant_num):
         save_path(save_path),
         cluster_num(cluster_num), 
-        id(significant_num, 0),
+        id(significant_num),
         k_means_cluster(cluster_num),
         connection_table(significant_num, vector<unsigned int>(significant_num, 0)),
         connection_table_new(cluster_num, vector<unsigned int>(cluster_num, 0))
@@ -39,7 +39,7 @@ class k_means
         void log(string save_path);
 
     private:
-        vector<unsigned int> id;
+        vector<cluster> id;
         vector<vector<unsigned int>> connection_table;
         vector<vector<unsigned int>> connection_table_new;
         vector<cluster> k_means_cluster; // stored cluster_id

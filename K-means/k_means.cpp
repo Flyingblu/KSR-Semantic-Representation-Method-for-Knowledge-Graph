@@ -5,7 +5,7 @@ class centroid
     public:
         centroid(){};
         centroid(unsigned int id):id(id), distance(0){};
-
+        ~centroid(){};
         unsigned int id;
         unsigned int distance;
 };
@@ -24,9 +24,11 @@ void k_means::load_id(string read_path)
             string buf, tmp;
             getline(reader, buf, ',');
             getline(reader, tmp);
-            (*i) = atoi(buf.c_str());
+            (*i).id = atoi(buf.c_str());
+            (*i).cunt = atoi(tmp.c_str());
             ++pbar.progress;
         }
+        pbar.progress_end();
     }
     else
     {
@@ -41,6 +43,7 @@ void k_means::load_table(string read_path)
     if (reader.is_open())
     {   unsigned int vector_size;
         ProgressBar pbar("Loading connnection table ...", vector_size * vector_size);
+        pbar.progress_begin();
         for (int i = 0; i < vector_size; ++i)
         {
             for (int j = 0; j < vector_size; ++j)
@@ -51,6 +54,7 @@ void k_means::load_table(string read_path)
                 ++pbar.progress;
             }
         }
+        pbar.progress_end();
     }
     else
     {
@@ -117,11 +121,21 @@ void k_means::k_means_clusterizing()
 
         cout << round << " round\t" << time(NULL) - timer << endl;
     }
+
     count_connection(k_means_cluster, k_means_cluster_content);
+    ProgressBar pbar("Counting entities of each k_means_cluster ...", cluster_num);
+    pbar.progress_begin();
     for (int i = 0; i < cluster_num; ++i)
     {
-        k_means_cluster[i].cunt = k_means_cluster_content[k_means_cluster[i].id].size();
+        unsigned int cluster_content_size = k_means_cluster_content[k_means_cluster[i].id].size();
+        for (int j = 0; j < cluster_content_size; ++j )
+        {
+            unsigned int  Point_id =  k_means_cluster_content[k_means_cluster[i].id][j];
+            k_means_cluster[i].cunt += id[Point_id].cunt;
+        }
+        ++pbar.progress;
     }
+    pbar.progress_end();
 }
 
 unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
@@ -156,6 +170,8 @@ unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
 
 void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<unsigned int, vector<unsigned int>>& k_means_cluster_content)
 {
+    ProgressBar pbar("Counting Connection ...", (cluster_num * cluster_num) / 2);
+    pbar.progress_begin();
     for (int i = 0; i < cluster_num; ++i)
     {
         unsigned int i_size = k_means_cluster_content[k_means_cluster[i].id].size();
@@ -177,8 +193,10 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
                     connection_table_new[i][j] += connection_table[point_1][point_2];
                 }
             }
+            ++pbar.progress;
         }
     }
+    pbar.progress_end();
 }
 
 void k_means::log(string save_path)
@@ -188,6 +206,7 @@ void k_means::log(string save_path)
     ofstream writer_1(save_path +" _" + buf + "_id");
     ofstream writer_2(save_path + "_" + buf + "_connection table");
     unsigned int total = 0;
+    cout << " Logging ..." << endl;
     for (int i = 0; i < cluster_num; ++i)
     {
         writer_1 << k_means_cluster[i].id << "," << k_means_cluster[i].cunt << endl;
