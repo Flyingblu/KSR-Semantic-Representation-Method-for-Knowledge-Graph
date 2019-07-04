@@ -25,7 +25,7 @@ class k_means
         id(significant_num, 0),
         k_means_cluster(cluster_num),
         connection_table(significant_num, vector<unsigned int>(significant_num, 0)),
-        connection_table_new(cluster_num, vector<unsigned int>(cluster_num))
+        connection_table_new(cluster_num, vector<unsigned int>(cluster_num, 0))
         {
             cout << "Initializing Done ..." << endl;
             

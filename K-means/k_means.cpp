@@ -70,10 +70,14 @@ void k_means::k_means_clusterizing()
     {
         k_means_cluster[i].id = i;
     }
-
+    unsigned int round = 0;
+    time_t timer = 0;
     while(changed)
     {
+        round += 1;
+        timer = time(NULL);
         changed = false;
+        
         for (int i = 0; i < vector_size; ++i)
         {
             unsigned int min_cluster = 0;
@@ -109,9 +113,13 @@ void k_means::k_means_clusterizing()
             k_means_cluster[i].id = center_new;
         }
 
-
+        cout << round << " round\t" << time(NULL) - timer << endl;
     }
     count_connection(k_means_cluster, k_means_cluster_content);
+    for (int i = 0; i < cluster_num; ++i)
+    {
+        k_means_cluster[i].cunt = k_means_cluster_content[k_means_cluster[i].id].size();
+    }
 }
 
 unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
@@ -150,7 +158,7 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
     {
         unsigned int i_size = k_means_cluster_content[k_means_cluster[i].id].size();
         
-        for(int j = i; j < cluster_num; ++i)
+        for(int j = i + 1; j < cluster_num; ++i)
         {
             unsigned int j_size = k_means_cluster_content[k_means_cluster[j].id].size();
             for (int k = 0; k < i_size; ++k)
@@ -159,6 +167,7 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
                 {
                     unsigned int point_1 = k_means_cluster_content[k_means_cluster[i].id][k];
                     unsigned int point_2 = k_means_cluster_content[k_means_cluster[j].id][q];
+
                     if (connection_table[point_1][point_2] == 0 && connection_table[point_2][point_1] != 0)
                     {
                         swap(point_1, point_2);
@@ -175,9 +184,24 @@ void k_means::log(string save_path)
     itoa(cluster_num, buf, 10);
     ofstream writer_1(save_path +" _" + buf + "_id");
     ofstream writer_2(save_path + "_" + buf + "_connection table");
+    unsigned int total = 0;
+    for (int i = 0; i < cluster_num; ++i)
+    {
+        writer_1 << k_means_cluster[i].id << "," << k_means_cluster[i].cunt << endl;
+    }
+    writer_1.close();
 
     for (int i = 0; i < cluster_num; ++i)
     {
-        writer_1 << k_means_cluster[i] << "," << ;
+        for (int j = 0; j < cluster_num; ++j)
+        {
+            writer_2 << connection_table_new[i][j];
+            if (j != cluster_num - 1)
+            {
+                writer_2 << ",";
+            }
+        }
+        writer_2 << endl;
     }
+    writer_2.close;
 }
