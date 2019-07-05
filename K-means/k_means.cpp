@@ -202,9 +202,9 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
 void k_means::log(string save_path)
 {   
     char buf[2];
-    itoa(cluster_num, buf, 10);
-    ofstream writer_1(save_path +" _" + buf + "_id");
-    ofstream writer_2(save_path + "_" + buf + "_connection table");
+    std::string s = to_string(cluster_num);
+    ofstream writer_1(save_path +" _" + s + "_id");
+    ofstream writer_2(save_path + "_" + s + "_connection table");
     unsigned int total = 0;
     cout << " Logging ..." << endl;
     for (int i = 0; i < cluster_num; ++i)
@@ -227,5 +227,5 @@ void k_means::log(string save_path)
         writer_2 << endl;
     }
     writer_2 << total;
-    writer_2.close;
+    writer_2.close();
 }

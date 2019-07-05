@@ -18,9 +18,8 @@ struct cluster
 class k_means
 {
     public:
-        k_means();
-        k_means(string save_path, unsigned int cluster_num, unsigned int significant_num):
-        save_path(save_path),
+        k_means(){};
+        k_means(unsigned int cluster_num, unsigned int significant_num):
         cluster_num(cluster_num), 
         id(significant_num),
         k_means_cluster(cluster_num),
@@ -36,7 +35,7 @@ class k_means
         void k_means_clusterizing();
         unsigned int center_point(vector<unsigned int>&);
         void count_connection(vector<cluster>&, unordered_map<unsigned int, vector<unsigned int>>&);
-        void log(string save_path);
+        void log(string);
 
     private:
         vector<cluster> id;
@@ -44,7 +43,7 @@ class k_means
         vector<vector<unsigned int>> connection_table_new;
         vector<cluster> k_means_cluster; // stored cluster_id
         unsigned int cluster_num;
-        string save_path;
+
 };
 
 
