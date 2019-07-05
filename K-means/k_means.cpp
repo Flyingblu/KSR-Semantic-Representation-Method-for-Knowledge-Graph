@@ -67,16 +67,16 @@ void k_means::load_table(string read_path)
 void k_means::k_means_clusterizing()
 {
     unsigned int vector_size = connection_table.size();
-
-    unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
-    vector<unsigned int> Point_cluster(vector_size, -1);                       // stored the cluster id for each point
-    bool changed = true;
     default_random_engine generator;
     uniform_int_distribution<int> distribution(0, vector_size);
+
     ProgressBar pbar("Start random initialization ... ", init_num);
     pbar.progress_begin();
     for (int k = 0; k < init_num; ++k)
     {
+        bool changed = true;
+        unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
+        vector<unsigned int> Point_cluster(vector_size, -1);                       // stored the cluster id for each point
         cout << k << "th random Initialization_Test ..." << endl;
         for (int i = 0; i < cluster_num; ++i)
         {
@@ -85,12 +85,9 @@ void k_means::k_means_clusterizing()
             initialization[k].push_back(initialization_id);
         }
 
-        unsigned int round = 0;
-        time_t timer = 0;
         while (changed)
         {
-            round += 1;
-            timer = time(NULL);
+
             changed = false;
 
             for (int i = 0; i < vector_size; ++i)
@@ -121,7 +118,6 @@ void k_means::k_means_clusterizing()
             }
 
             k_means_cluster_content.clear();
-            std::string s = to_string(round);
             for (int i = 0; i < vector_size; ++i)
             {
                 k_means_cluster_content[Point_cluster[i]].push_back(i);
@@ -145,7 +141,7 @@ void k_means::k_means_clusterizing()
         }
         for (int i = 0; i < cluster_num; ++i)
         {
-            for (int j = 0; j < cluster_num; ++i)
+            for (int j = 0; j < cluster_num; ++j)
             {
                 score[k].cunt += connection_table_new[k][i][j];
             }
