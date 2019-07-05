@@ -68,7 +68,7 @@ void k_means::k_means_clusterizing()
     unsigned int vector_size = connection_table.size();
     
     unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
-    vector<unsigned> Point_cluster(vector_size, -1); // stored the cluster id for each point
+    vector<unsigned int> Point_cluster(vector_size, -1); // stored the cluster id for each point
     bool changed = true;
 
     for (int i = 0; i < cluster_num; ++i)
@@ -111,6 +111,7 @@ void k_means::k_means_clusterizing()
             cout << round << " round\t" << time(NULL) - timer << " done !" << endl;
             break;
         }
+
         k_means_cluster_content.clear();
         std::string s = to_string(round);
         ProgressBar pro_bar(s + " round, Contructing k_means_cluster_content ...", vector_size);
@@ -153,7 +154,7 @@ unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
     for (int i = 0; i < vector_size; ++i)
     {
         centroid Cent(cluster_content[i]);
-        distance_sum.push_back(Cent);
+        distance_sum[i] = Cent;
         for (int j = 0; j < vector_size; ++j)
         {
             unsigned int Point_1 = cluster_content[i];
@@ -186,7 +187,7 @@ void k_means::count_connection(vector<cluster>& k_means_cluster, unordered_map<u
     {
         unsigned int i_size = k_means_cluster_content[k_means_cluster[i].id].size();
         
-        for(int j = i + 1; j < cluster_num; ++i)
+        for(int j = i + 1; j < cluster_num; ++j)
         {
             unsigned int j_size = k_means_cluster_content[k_means_cluster[j].id].size();
             for (int k = 0; k < i_size; ++k)
@@ -213,8 +214,8 @@ void k_means::log(string save_path)
 {   
     char buf[2];
     std::string s = to_string(cluster_num);
-    ofstream writer_1(save_path +" _" + s + "_id");
-    ofstream writer_2(save_path + "_" + s + "_connection table");
+    ofstream writer_1(save_path + "_" + s + "_id");
+    ofstream writer_2(save_path + "_" + s + "_connection_table");
     unsigned int total = 0;
     cout << " Logging ..." << endl;
     for (int i = 0; i < cluster_num; ++i)
