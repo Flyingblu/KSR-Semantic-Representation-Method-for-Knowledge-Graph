@@ -18,14 +18,14 @@ void k_means::load_id(string read_path)
         auto i = id.begin();
         ProgressBar pbar("Loading cluster id ...", id.size());
         pbar.progress_begin();
-        while(!reader.eof())
+        for (; i != id.end(); ++i)
         {
             
             string buf, tmp;
             getline(reader, buf, ',');
             getline(reader, tmp);
             (*i).id = atoi(buf.c_str());
-            (*i).cunt = atoi(tmp.c_str());
+            (*i).cunt = stoi(tmp);
             ++pbar.progress;
         }
         pbar.progress_end();
@@ -214,8 +214,8 @@ void k_means::log(string save_path)
 {   
     char buf[2];
     std::string s = to_string(cluster_num);
-    ofstream writer_1(save_path + "_" + s + "_id");
-    ofstream writer_2(save_path + "_" + s + "_connection_table");
+    ofstream writer_1(save_path + "_" + s + "_id.csv");
+    ofstream writer_2(save_path + "_" + s + "_connection_table.csv");
     unsigned int total = 0;
     ProgressBar pbar_1 ("Logging k_means_cluster ...", cluster_num);
     pbar_1.progress_begin();
