@@ -217,13 +217,18 @@ void k_means::log(string save_path)
     ofstream writer_1(save_path + "_" + s + "_id");
     ofstream writer_2(save_path + "_" + s + "_connection_table");
     unsigned int total = 0;
-    cout << " Logging ..." << endl;
+    ProgressBar pbar_1 ("Logging k_means_cluster ...", cluster_num);
+    pbar_1.progress_begin();
     for (int i = 0; i < cluster_num; ++i)
     {
         writer_1 << k_means_cluster[i].id << "," << k_means_cluster[i].cunt << endl;
+        ++pbar_1.progress;
     }
+    pbar_1.progress_end();
     writer_1.close();
 
+    ProgressBar pbar_2("Logging new_connection_table ...", cluster_num * cluster_num);
+    pbar_2.progress_begin();
     for (int i = 0; i < cluster_num; ++i)
     {
         for (int j = 0; j < cluster_num; ++j)
@@ -234,9 +239,11 @@ void k_means::log(string save_path)
             {
                 writer_2 << ",";
             }
+            ++pbar_2.progress;
         }
         writer_2 << endl;
     }
+    pbar_2.progress_end();
     writer_2 << total;
-    writer_2.close();
+    writer_2.close(); 
 }
