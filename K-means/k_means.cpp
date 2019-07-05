@@ -170,9 +170,10 @@ unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
 
             }
             distance_sum[i].distance += connection_table[cluster_content[i]][cluster_content[j]];
+            swap(i, j);
         }
     }
-    sort(distance_sum.begin(), distance_sum.end(), [](centroid src, centroid des){return src.distance < des.distance;});
+    sort(distance_sum.begin(), distance_sum.end(), [](centroid src, centroid des){return src.distance > des.distance;});
     return distance_sum[0].id;
 }
 
