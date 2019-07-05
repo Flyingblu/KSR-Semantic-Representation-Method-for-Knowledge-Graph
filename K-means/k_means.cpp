@@ -156,21 +156,22 @@ unsigned int k_means::center_point(vector<unsigned int>& cluster_content)
         distance_sum.push_back(Cent);
         for (int j = 0; j < vector_size; ++j)
         {
-            if (cluster_content[i] == cluster_content[j])
+            unsigned int Point_1 = cluster_content[i];
+            unsigned int Point_2 = cluster_content[j];
+            if (Point_1 == Point_2)
             {
                 continue;
             }
-            if (connection_table[cluster_content[i]][cluster_content[j]] != connection_table[cluster_content[j]][cluster_content[i]])
+            if (connection_table[Point_1][Point_2] != connection_table[Point_2][Point_1])
             {
-                if(connection_table[cluster_content[i]][cluster_content[j]] == 0 && connection_table[cluster_content[j]][cluster_content[i]] != 0)
+                if(connection_table[Point_1][Point_2] == 0 && connection_table[Point_2][Point_1] != 0)
                 {
-                    swap(i, j);
+                    swap(Point_1, Point_2);
                 }
 
 
             }
-            distance_sum[i].distance += connection_table[cluster_content[i]][cluster_content[j]];
-            swap(i, j);
+            distance_sum[i].distance += connection_table[Point_1][Point_2];
         }
     }
     sort(distance_sum.begin(), distance_sum.end(), [](centroid src, centroid des){return src.distance > des.distance;});
