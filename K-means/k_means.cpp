@@ -41,7 +41,7 @@ void k_means::load_table(string read_path)
 {
     ifstream reader(read_path);
     if (reader.is_open())
-    {   unsigned int vector_size;
+    {   unsigned int vector_size = connection_table.size();
         ProgressBar pbar("Loading connnection table ...", vector_size * vector_size);
         pbar.progress_begin();
         for (int i = 0; i < vector_size; ++i)
