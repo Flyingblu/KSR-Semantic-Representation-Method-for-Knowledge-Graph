@@ -22,6 +22,7 @@ class k_means
         k_means(){};
         k_means(unsigned int cluster_num, unsigned int significant_num, unsigned int init_num):
         cluster_num(cluster_num), 
+        init_num(init_num),
         id(significant_num),
         initialization(init_num),
         k_means_cluster(init_num, vector<cluster>(cluster_num)),
