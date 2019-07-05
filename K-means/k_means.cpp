@@ -106,13 +106,21 @@ void k_means::k_means_clusterizing()
                 changed = true;
             }
         }
-
+        if (!changed)
+        {
+            cout << round << " round\t" << time(NULL) - timer << " done !" << endl;
+            break;
+        }
         k_means_cluster_content.clear();
-
+        std::string s = to_string(round);
+        ProgressBar pro_bar(s + " round, Contructing k_means_cluster_content ...", vector_size);
+        pro_bar.progress_begin();
         for (int i = 0; i < vector_size; ++i)
         {
             k_means_cluster_content[Point_cluster[i]].push_back(i);
+            ++pro_bar.progress;
         }
+        pro_bar.progress_end();
         for (int i = 0; i < cluster_num; ++i)
         {
             unsigned int center_new = center_point(k_means_cluster_content[k_means_cluster[i].id]);
