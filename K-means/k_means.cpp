@@ -67,7 +67,8 @@ void k_means::load_table(string read_path)
 void k_means::k_means_clusterizing()
 {
     unsigned int vector_size = connection_table.size();
-    default_random_engine generator;
+    random_device r;
+    default_random_engine generator(r());
     uniform_int_distribution<int> distribution(0, vector_size - 1);
 
     ProgressBar pbar("Start random initialization ... ", init_num);
@@ -77,12 +78,18 @@ void k_means::k_means_clusterizing()
         bool changed = true;
         unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
         vector<unsigned int> Point_cluster(vector_size, -1);                       // stored the cluster id for each point
+        set<unsigned int> initialized_cluster;
         cout << k << "th random Initialization_Test ..." << endl;
         for (int i = 0; i < cluster_num; ++i)
         {
             unsigned int initialization_id = distribution(generator);
-            k_means_cluster[k][i].id = initialization_id;
-            initialization[k].push_back(initialization_id);
+			while (initialized_cluster.find(initialization_id) != initialized_cluster.end())
+			{
+				initialization_id = distribution(generator);
+			}
+			initialized_cluster.insert(initialization_id);
+			k_means_cluster[k][i].id = initialization_id;
+			initialization[k].push_back(initialization_id);
         }
 
         while (changed)
@@ -93,17 +100,29 @@ void k_means::k_means_clusterizing()
             for (int i = 0; i < vector_size; ++i)
             {
                 unsigned int min_cluster = 0;
-                for (int j = 1; j < cluster_num; ++j)
+                for (int j = 0; j < cluster_num; ++j)
                 {
                     if (k_means_cluster[k][j].id == i)
                     {
                         min_cluster = j;
                         break;
                     }
-                    if (connection_table[i][k_means_cluster[k][min_cluster].id] < connection_table[i][k_means_cluster[k][j].id])
-                    {
-                        min_cluster = j;
-                    }
+                    unsigned int Point_1 = i;
+					unsigned int Point_2 = k_means_cluster[k][min_cluster].id;
+					unsigned int Point_3 = i;
+					unsigned int Point_4 = k_means_cluster[k][j].id;
+					if (connection_table[Point_1][Point_2] == 0 && connection_table[Point_2][Point_1] != 0)
+					{
+						swap(Point_1, Point_2);
+					}
+					if (connection_table[Point_3][Point_4] == 0 && connection_table[Point_4][Point_3] != 0)
+					{
+						swap(Point_3, Point_4);
+					}
+                    if (connection_table[Point_1][Point_2] < connection_table[Point_3][Point_4])
+					{
+						min_cluster = j;
+					}
                 }
                 unsigned int old_cluster = Point_cluster[i];
                 Point_cluster[i] = k_means_cluster[k][min_cluster].id;

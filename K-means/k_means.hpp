@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include "../RDF_parser/progress_bar.hpp"
 #include <random>
+#include <set>
 using namespace std;
 
 struct cluster
