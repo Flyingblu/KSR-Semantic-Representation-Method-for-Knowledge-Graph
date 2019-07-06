@@ -68,7 +68,7 @@ void k_means::k_means_clusterizing()
 {
     unsigned int vector_size = connection_table.size();
     default_random_engine generator;
-    uniform_int_distribution<int> distribution(0, vector_size);
+    uniform_int_distribution<int> distribution(0, vector_size - 1);
 
     ProgressBar pbar("Start random initialization ... ", init_num);
     pbar.progress_begin();
@@ -80,7 +80,7 @@ void k_means::k_means_clusterizing()
         cout << k << "th random Initialization_Test ..." << endl;
         for (int i = 0; i < cluster_num; ++i)
         {
-            unsigned initialization_id = distribution(generator);
+            unsigned int initialization_id = distribution(generator);
             k_means_cluster[k][i].id = initialization_id;
             initialization[k].push_back(initialization_id);
         }
