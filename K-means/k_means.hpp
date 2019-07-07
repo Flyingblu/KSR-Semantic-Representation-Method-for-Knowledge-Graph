@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <unordered_map>
 #include "../RDF_parser/progress_bar.hpp"
+#include <boost/progress.hpp>
 #include <random>
 #include <set>
+#include <mutex>
 using namespace std;
 
 struct cluster
@@ -20,7 +22,7 @@ struct cluster
 class k_means
 {
     public:
-        k_means(){};
+        //k_means(){};
         k_means(unsigned int cluster_num, unsigned int significant_num, unsigned int init_num):
         cluster_num(cluster_num), 
         init_num(init_num),
@@ -29,23 +31,25 @@ class k_means
         k_means_cluster(init_num, vector<cluster>(cluster_num)),
         connection_table(significant_num, vector<unsigned int>(significant_num, 0)),
         connection_table_new(init_num, vector<vector<unsigned int>>(cluster_num, vector<unsigned int>(cluster_num, 0))),
-        score(init_num)
+        score(init_num),
+        display(init_num)
         {
             for (int i = 0; i < init_num; ++i)
             {
                 score[i].id = i;
             }
             cout << "Initializing Done ..." << endl;
-            
         };    
 
         void load_id(string);
         void load_table(string);
         void k_means_clusterizing();
+        
         unsigned int center_point(vector<unsigned int>&);
         void count_connection(vector<cluster>&, unordered_map<unsigned int, vector<unsigned int>>&, int);
+        void concurrent_run();
         void log(string);
-
+        
     private:
         vector<cluster> id;
         vector<vector<unsigned int>> initialization;
@@ -55,6 +59,11 @@ class k_means
         vector<cluster> score;
         unsigned int cluster_num;
         unsigned int init_num;
+        unsigned int init_round = -1;
+        boost::progress_display display;
+        mutex init_mutex;
+        mutex pro_bar_mutex;
+
 
 };
 
