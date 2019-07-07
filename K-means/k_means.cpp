@@ -16,8 +16,8 @@ void k_means::load_id(string read_path)
     if (reader.is_open())
     {
         auto i = id.begin();
-        ProgressBar pbar("Loading cluster id ...", id.size());
-        pbar.progress_begin();
+        ProgressBar pbar_1("Loading cluster id ...", id.size());
+        pbar_1.progress_begin();
         for (; i != id.end(); ++i)
         {
 
@@ -26,9 +26,9 @@ void k_means::load_id(string read_path)
             getline(reader, tmp);
             (*i).id = atoi(buf.c_str());
             (*i).cunt = stoi(tmp);
-            ++pbar.progress;
+            ++pbar_1.progress;
         }
-        pbar.progress_end();
+        pbar_1.progress_end();
     }
     else
     {
@@ -43,8 +43,8 @@ void k_means::load_table(string read_path)
     if (reader.is_open())
     {
         unsigned int vector_size = connection_table.size();
-        ProgressBar pbar("Loading connnection table ...", vector_size * vector_size);
-        pbar.progress_begin();
+        ProgressBar pbar_1("Loading connnection table ...", vector_size * vector_size);
+        pbar_1.progress_begin();
         for (int i = 0; i < vector_size; ++i)
         {
             for (int j = 0; j < vector_size; ++j)
@@ -52,10 +52,10 @@ void k_means::load_table(string read_path)
                 string buf;
                 getline(reader, buf, ',');
                 connection_table[i][j] = atoi(buf.c_str());
-                ++pbar.progress;
+                ++pbar_1.progress;
             }
         }
-        pbar.progress_end();
+        pbar_1.progress_end();
     }
     else
     {
@@ -67,19 +67,16 @@ void k_means::load_table(string read_path)
 void k_means::k_means_clusterizing()
 {
     init_mutex.lock();
-    ++init_round;
-    
     if (init_round == init_num)
     {
         return;
     }
     unsigned int k = init_round;
+    ++init_round;
     init_mutex.unlock();
-    unsigned int vector_size = connection_table.size();
-    random_device r;
-    default_random_engine generator(r());
-    uniform_int_distribution<int> distribution(0, vector_size - 1);
 
+    unsigned int vector_size = connection_table.size();
+    
     
     bool changed = true;
     unordered_map<unsigned int, vector<unsigned int>> k_means_cluster_content; //store point id in one cluster
@@ -137,20 +134,24 @@ void k_means::k_means_clusterizing()
                 changed = true;
             }
         }
-        if (!changed)
-        {
-            break;
-        }
-        if (round >= 76)
-        {
-            cout << "Loop limit break" << endl;
-            break;
-        }
+        
+        
 
         k_means_cluster_content.clear();
         for (int i = 0; i < vector_size; ++i)
         {
             k_means_cluster_content[Point_cluster[i]].push_back(i);
+        }
+
+        if (round >= 76)
+        {
+            //cout << "Loop limit break" << endl;
+            break;
+        }
+        
+        if (!changed)
+        {
+            break;
         }
         for (int i = 0; i < cluster_num; ++i)
         {
@@ -158,13 +159,15 @@ void k_means::k_means_clusterizing()
             k_means_cluster[k][i].id = center_new;
         }
         round += 1;
-
+        
+        
     }
 
     count_connection(k_means_cluster[k], k_means_cluster_content, k);
     for (int i = 0; i < cluster_num; ++i)
     {
         unsigned int cluster_content_size = k_means_cluster_content[k_means_cluster[k][i].id].size();
+        k_means_cluster[k][i].cluster_size = cluster_content_size;
         for (int j = 0; j < cluster_content_size; ++j)
         {
             unsigned int Point_id = k_means_cluster_content[k_means_cluster[k][i].id][j];
@@ -178,9 +181,11 @@ void k_means::k_means_clusterizing()
             score[k].cunt += connection_table_new[k][i][j];
         }
     }
+
     pro_bar_mutex.lock();
-    ++display;
+    ++pbar.progress;
     pro_bar_mutex.unlock();
+
     
 }
 
@@ -246,11 +251,14 @@ void k_means::count_connection(vector<cluster> &k_means_cluster, unordered_map<u
 
 void k_means::concurrent_run()
 {
+    pbar.progress_begin();
     while(init_round < init_num)
     {   
-        thread* thread_pointer[16];
-        unsigned int last_index;
-        for (int i = 0; i < 16; ++i)
+        
+        thread* thread_pointer[8];
+        unsigned int last_index = 0;
+    
+        for (int i = 0; i < 8; ++i)
         {
             thread* th = new thread(&k_means::k_means_clusterizing, this);
             thread_pointer[i] = th;
@@ -265,10 +273,9 @@ void k_means::concurrent_run()
             (*thread_pointer[i]).join();
             delete thread_pointer[i];
         }
-  
     }
     sort(score.begin(), score.end(), [](cluster src, cluster des) { return src.cunt < des.cunt; });
-
+    pbar.progress_end();
 }
 void k_means::log(string save_path)
 {
@@ -281,7 +288,7 @@ void k_means::log(string save_path)
     pbar_1.progress_begin();
     for (int i = 0; i < cluster_num; ++i)
     {
-        writer_1 << k_means_cluster[score[0].id][i].id << "," << k_means_cluster[score[0].id][i].cunt << endl;
+        writer_1 << k_means_cluster[score[0].id][i].id << "," << k_means_cluster[score[0].id][i].cunt << "," << k_means_cluster[score[0].id][i].cluster_size << endl;
         ++pbar_1.progress;
     }
     pbar_1.progress_end();

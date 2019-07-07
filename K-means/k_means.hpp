@@ -18,6 +18,7 @@ struct cluster
 {
     unsigned int id = 0;
     unsigned int cunt = 0;
+    unsigned int cluster_size = 0;
 };
 class k_means
 {
@@ -32,7 +33,9 @@ class k_means
         connection_table(significant_num, vector<unsigned int>(significant_num, 0)),
         connection_table_new(init_num, vector<vector<unsigned int>>(cluster_num, vector<unsigned int>(cluster_num, 0))),
         score(init_num),
-        display(init_num)
+        pbar("Random Initializing ...", init_num),
+        generator(r()),
+        distribution(0, significant_num - 1)
         {
             for (int i = 0; i < init_num; ++i)
             {
@@ -59,11 +62,13 @@ class k_means
         vector<cluster> score;
         unsigned int cluster_num;
         unsigned int init_num;
-        unsigned int init_round = -1;
-        boost::progress_display display;
+        unsigned int init_round = 0;
+        ProgressBar pbar;
         mutex init_mutex;
         mutex pro_bar_mutex;
-
+        random_device r;
+        default_random_engine generator;
+        uniform_int_distribution<int> distribution;
 
 };
 
