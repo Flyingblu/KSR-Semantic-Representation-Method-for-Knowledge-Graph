@@ -124,10 +124,13 @@ public:
 	const int dim;
 	const int n_factor;
 	const double sigma;
+	size_t entity_size;
+	size_t relation_size;
 
 public:
 	MFactorE(
-		const Dataset &dataset,
+		const string &entity_path,
+		const string &relation_path,
 		const TaskType &task_type,
 		const string &logging_base_path,
 		int dim,
@@ -136,7 +139,7 @@ public:
 		double sigma,
 		int n_factor,
 		bool do_load_testing)
-		: Model(dataset, task_type, logging_base_path, do_load_testing),
+		: Model(task_type, logging_base_path, do_load_testing),
 		  dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";
@@ -145,7 +148,9 @@ public:
 		logging.record() << "\t[Training Threshold]\t" << training_threshold;
 		logging.record() << "\t[Factor Number]\t" << n_factor;
 
-		relation_space.resize(count_relation());
+		load_entity_relation_size(entity_path, relation_path);
+
+		relation_space.resize(this->relation_size);
 		for (vec &elem : relation_space)
 		{
 			elem = normalise(ones(n_factor));
@@ -153,7 +158,7 @@ public:
 
 		for (auto i = 0; i < n_factor; ++i)
 		{
-			factors.push_back(new SFactorE(dim, count_entity(), count_relation(), sigma));
+			factors.push_back(new SFactorE(dim, this->entity_size, this->relation_size, sigma));
 			factors_mtx.push_back(new mutex());
 		}
 	}
@@ -168,6 +173,16 @@ public:
 	}
 
 public:
+
+	void load_entity_relation_size(const string& entity_path, const string& relation_path) {
+		ifstream entity_file(entity_path, ios_base::binary);
+		ifstream relation_file(relation_path, ios_base::binary);
+		entity_file.read((char*)&this->entity_size, sizeof(this->entity_size));
+		relation_file.read((char*)&this->relation_size, sizeof(this->relation_size));
+		entity_file.close();
+		relation_file.close();
+	}
+
 	Col<int> factor_index(const unsigned int entity_id) const
 	{
 		Col<int> v_index(n_factor);
@@ -226,17 +241,20 @@ public:
 		acc_space_mtx.unlock();
 	}
 
-	virtual void train(int parallel_thread) override
+	virtual void train(int parallel_thread, vector<Dataset>& dataset) override
 	{
-		acc_space.resize(count_relation());
+		acc_space.resize(relation_size);
 		for (vec &elem : acc_space)
 		{
 			elem = zeros(n_factor);
 		}
 
-		Model::train(parallel_thread);
+		for (auto i: dataset) {
+			Model::load_dataset(i);
+			Model::train(parallel_thread);
+		}
 
-		for (auto i = 0; i < count_relation(); ++i)
+		for (auto i = 0; i < relation_size; ++i)
 		{
 			relation_space[i] =
 				normalise(max(-acc_space[i], ones(n_factor) / dim), 1);

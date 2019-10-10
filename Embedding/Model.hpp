@@ -13,7 +13,7 @@ using namespace arma;
 class Model
 {
 public:
-	const DataModel &data_model;
+	const DataModel *data_model;
 	const TaskType task_type;
 	const bool be_deleted_data_model;
 
@@ -24,11 +24,10 @@ public:
 	int epos;
 
 public:
-	Model(const Dataset &dataset,
-		  const TaskType &task_type,
+	Model(const TaskType &task_type,
 		  const string &logging_base_path, 
 		  const bool do_load_testing)
-		: data_model(*(new DataModel(dataset, do_load_testing))), task_type(task_type),
+		: data_model(nullptr), task_type(task_type),
 		  logging(*(new ModelLogging(logging_base_path))),
 		  be_deleted_data_model(true)
 	{
@@ -37,6 +36,15 @@ public:
 
 		logging.record() << "\t[Dataset]\t" << dataset.name;
 		logging.record() << TaskTypeName(task_type);
+	}
+
+public:
+
+	void load_dataset(Dataset& dataset) {
+		if (data_model != nullptr) {
+			delete data_model;
+		}
+		data_model = new DataModel(dataset, false);
 	}
 
 public:
@@ -73,7 +81,7 @@ public:
 		}
 	}
 
-	void run(int total_epos, int parallel_thread)
+	void run(int total_epos, int parallel_thread, vector<Dataset>& dataset)
 	{
 		logging.record() << "\t[Epos]\t" << total_epos;
 
@@ -83,7 +91,7 @@ public:
 		while (total_epos-- > 0)
 		{
 			++prog_bar.progress;
-			train(parallel_thread);
+			train(parallel_thread, dataset);
 		}
 		train(parallel_thread);
 		prog_bar.progress_end();
@@ -110,7 +118,7 @@ public:
 
 			if (task_type == LinkPredictionRelation || part == 2)
 			{
-				for (auto j = 0; j != data_model.set_relation.size(); ++j)
+				for (auto j = 0; j != data_model.relation_size; ++j)
 				{
 					t.second = j;
 
@@ -119,13 +127,13 @@ public:
 
 					++rmean;
 
-					if (data_model.check_data_all.find(t) == data_model.check_data_all.end())
+					if (data_model.check_data_train.find(t) == data_model.check_data_train.end() && data_model.check_data_test.find(t) == data_model.check_data_test.end())
 						++frmean;
 				}
 			}
 			else
 			{
-				for (auto j = 0; j != data_model.set_entity.size(); ++j)
+				for (auto j = 0; j != data_model.entity_size; ++j)
 				{
 					if (task_type == LinkPredictionHead || part == 1)
 						t.first.first = j;
@@ -137,7 +145,7 @@ public:
 
 					++rmean;
 
-					if (data_model.check_data_all.find(t) == data_model.check_data_all.end())
+					if (data_model.check_data_train.find(t) == data_model.check_data_train.end() && data_model.check_data_test.find(t) == data_model.check_data_test.end())
 					{
 						++frmean;
 						//if (frmean > hit_rank)
@@ -272,18 +280,12 @@ public:
 			delete &data_model;
 			delete &logging;
 		}
+		if (data_model != nullptr) {
+			delete data_model;
+		}
 	}
 
 public:
-	int count_entity() const
-	{
-		return data_model.set_entity.size();
-	}
-
-	int count_relation() const
-	{
-		return data_model.set_relation.size();
-	}
 
 	const DataModel &get_data_model() const
 	{

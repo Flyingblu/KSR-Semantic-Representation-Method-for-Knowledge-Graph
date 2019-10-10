@@ -7,15 +7,15 @@ class DataModel
 {
 public:
 	set<pair<pair<unsigned int, unsigned int>, unsigned int>> check_data_train;
-	set<pair<pair<unsigned int, unsigned int>, unsigned int>> check_data_all;
+	set<pair<pair<unsigned int, unsigned int>, unsigned int>> check_data_test;
 
 public:
 	vector<pair<pair<unsigned int, unsigned int>, unsigned int>> data_train;
 	vector<pair<pair<unsigned int, unsigned int>, unsigned int>> data_test_true;
 
 public:
-	set<unsigned int> set_entity;
-	set<unsigned int> set_relation;
+	size_t entity_size;
+	size_t relation_size;
 
 public:
 	vector<char> relation_type;
@@ -31,9 +31,9 @@ public:
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_heads;
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_tails;
 		load_training(dataset.base_dir + dataset.training, rel_heads, rel_tails);
-		relation_hpt.resize(set_relation.size());
-		relation_tph.resize(set_relation.size());
-		for (auto i = 0; i != set_relation.size(); ++i)
+		relation_hpt.resize(relation_size);
+		relation_tph.resize(relation_size);
+		for (auto i = 0; i != relation_size; ++i)
 		{
 			double sum = 0;
 			double total = 0;
@@ -44,7 +44,7 @@ public:
 			}
 			relation_tph[i] = total / sum;
 		}
-		for (auto i = 0; i != set_relation.size(); ++i)
+		for (auto i = 0; i != relation_size; ++i)
 		{
 			double sum = 0;
 			double total = 0;
@@ -62,9 +62,9 @@ public:
 		}
 
 		double threshold = 1.5;
-		relation_type.resize(set_relation.size());
+		relation_type.resize(relation_size);
 
-		for (auto i = 0; i < set_relation.size(); ++i)
+		for (auto i = 0; i < relation_size; ++i)
 		{
 			if (relation_tph[i] < threshold && relation_hpt[i] < threshold)
 			{
@@ -115,11 +115,6 @@ public:
 
 			data_train.push_back(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
 			check_data_train.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
-			check_data_all.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
-
-			set_entity.insert(tri_arr[0]);
-			set_entity.insert(tri_arr[2]);
-			set_relation.insert(tri_arr[1]);
 
 			rel_heads[tri_arr[1]][tri_arr[0]].push_back(tri_arr[2]);
 			rel_tails[tri_arr[1]][tri_arr[2]].push_back(tri_arr[0]);
@@ -151,11 +146,8 @@ public:
 			triple_file.read((char *)tri_arr, sizeof(unsigned int) * 3);
 
 			vin_true.push_back(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
-			check_data_all.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
+			check_data_test.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
 
-			set_entity.insert(tri_arr[0]);
-			set_entity.insert(tri_arr[2]);
-			set_relation.insert(tri_arr[1]);
 		}
 		triple_file.close();
 		prog_bar.progress_end();
@@ -178,11 +170,11 @@ public:
 		{
 			if (rand() % 1000 < 1000 * prob)
 			{
-				triplet.first.second = rand() % set_entity.size();
+				triplet.first.second = rand() % entity_size;
 			}
 			else
 			{
-				triplet.first.first = rand() % set_entity.size();
+				triplet.first.first = rand() % entity_size;
 			}
 
 			if (check_data_train.find(triplet) == check_data_train.end())

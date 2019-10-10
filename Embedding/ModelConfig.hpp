@@ -7,6 +7,8 @@ public:
 	const string	base_dir;
 	const string	training;
 	const string	testing;
+	const string	entity;
+	const string	relation;
 	const string	log;
 	const string	name;
 	const bool	self_false_sampling;
@@ -22,6 +24,8 @@ public:
 		base_dir(base_dir),
 		training(training),
 		testing(testing),
+		entity(entity),
+		relation(relation),
 		log(log),
 		self_false_sampling(self_false_sampling)
 	{
