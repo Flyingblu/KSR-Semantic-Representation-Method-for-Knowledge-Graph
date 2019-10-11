@@ -220,7 +220,7 @@ public:
 	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
 	{
 		pair<pair<unsigned int, unsigned int>, unsigned int> triplet_f;
-		data_model.sample_false_triplet(triplet, triplet_f);
+		data_model->sample_false_triplet(triplet, triplet_f);
 
 		if (prob_triplets(triplet) - prob_triplets(triplet_f) > margin)
 			return;
@@ -241,7 +241,7 @@ public:
 		acc_space_mtx.unlock();
 	}
 
-	virtual void train(int parallel_thread, vector<Dataset>& dataset) override
+	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
 	{
 		acc_space.resize(relation_size);
 		for (vec &elem : acc_space)
@@ -251,7 +251,7 @@ public:
 
 		for (auto i: dataset) {
 			Model::load_dataset(i);
-			Model::train(parallel_thread);
+			Model::train(parallel_thread, dataset);
 		}
 
 		for (auto i = 0; i < relation_size; ++i)

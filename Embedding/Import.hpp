@@ -22,18 +22,6 @@
 using namespace std;
 using namespace arma;
 
-inline
-string& replace_all(string&   str,const   string&   old_value,const   string&   new_value)   
-{   
-	while(true)   {   
-		string::size_type   pos(0);   
-		if(   (pos=str.find(old_value))!=string::npos   )   
-			str.replace(pos,old_value.length(),new_value);   
-		else   break;   
-	}   
-	return   str;   
-}   
-
 inline 
 double sign(const double& x)
 {
@@ -41,17 +29,4 @@ double sign(const double& x)
 		return 0;
 	else
 		return x>0?+1:-1;
-}
-
-inline
-double norm_L2(const vec& m)
-{
-	return norm(m, 2);
-}
-
-void message(const string& strout)
-{
-	system((string("mshta vbscript:msgbox(\"")
-		+ strout
-		+ string("\")(window.close)")).c_str());
 }

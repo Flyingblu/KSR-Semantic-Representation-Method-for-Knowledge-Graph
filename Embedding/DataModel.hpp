@@ -25,12 +25,12 @@ public:
 	vector<double> relation_hpt;
 
 public:
-	DataModel(const Dataset &dataset, bool do_load_testing)
+	DataModel(const Dataset *dataset, bool do_load_testing)
 	{
 		// TODO: these two maps seem to be huge, see if we can optimize it.
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_heads;
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_tails;
-		load_training(dataset.base_dir + dataset.training, rel_heads, rel_tails);
+		load_training(dataset->base_dir + dataset->training, rel_heads, rel_tails);
 		relation_hpt.resize(relation_size);
 		relation_tph.resize(relation_size);
 		for (auto i = 0; i != relation_size; ++i)
@@ -58,7 +58,7 @@ public:
 
 		if (do_load_testing)
 		{
-			load_testing(dataset.base_dir + dataset.testing, data_test_true);
+			load_testing(dataset->base_dir + dataset->testing, data_test_true);
 		}
 
 		double threshold = 1.5;

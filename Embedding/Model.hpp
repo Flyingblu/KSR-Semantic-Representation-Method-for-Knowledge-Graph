@@ -33,14 +33,12 @@ public:
 	{
 		epos = 0;
 		std::cout << "Ready" << endl;
-
-		logging.record() << "\t[Dataset]\t" << dataset.name;
 		logging.record() << TaskTypeName(task_type);
 	}
 
 public:
 
-	void load_dataset(Dataset& dataset) {
+	void load_dataset(Dataset* dataset) {
 		if (data_model != nullptr) {
 			delete data_model;
 		}
@@ -56,20 +54,20 @@ public:
 	virtual void train_batch(size_t start, size_t length) {
 		size_t end = start + length;
 		for (size_t i = start; i < end; ++i) {
-			train_triplet(data_model.data_train[i]);
+			train_triplet(data_model->data_train[i]);
 		}
 	}
 
-	virtual void train(int parallel_thread = 1)
+	virtual void train(int parallel_thread, vector<Dataset*>& dataset)
 	{
 		++epos;
 
-		size_t num_each_thread = data_model.data_train.size() / parallel_thread;
+		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
 		thread* threads[parallel_thread];
 
 		for (auto i = 0; i < parallel_thread; ++i) {
 			if (i == parallel_thread - 1) {
-				threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, data_model.data_train.size() - i * num_each_thread);
+				threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, data_model->data_train.size() - i * num_each_thread);
 				continue;
 			}
 			threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, num_each_thread);
@@ -81,7 +79,7 @@ public:
 		}
 	}
 
-	void run(int total_epos, int parallel_thread, vector<Dataset>& dataset)
+	void run(int total_epos, int parallel_thread, vector<Dataset*>& dataset)
 	{
 		logging.record() << "\t[Epos]\t" << total_epos;
 
@@ -93,7 +91,7 @@ public:
 			++prog_bar.progress;
 			train(parallel_thread, dataset);
 		}
-		train(parallel_thread);
+		train(parallel_thread, dataset);
 		prog_bar.progress_end();
 	}
 
@@ -111,14 +109,14 @@ public:
 		for (size_t i = start; i < end; ++i)
 		{
 
-			pair<pair<int, int>, int> t = data_model.data_test_true[i];
+			pair<pair<int, int>, int> t = data_model->data_test_true[i];
 			int frmean = 0;
 			int rmean = 0;
-			double score_i = prob_triplets(data_model.data_test_true[i]);
+			double score_i = prob_triplets(data_model->data_test_true[i]);
 
 			if (task_type == LinkPredictionRelation || part == 2)
 			{
-				for (auto j = 0; j != data_model.relation_size; ++j)
+				for (auto j = 0; j != data_model->relation_size; ++j)
 				{
 					t.second = j;
 
@@ -127,13 +125,13 @@ public:
 
 					++rmean;
 
-					if (data_model.check_data_train.find(t) == data_model.check_data_train.end() && data_model.check_data_test.find(t) == data_model.check_data_test.end())
+					if (data_model->check_data_train.find(t) == data_model->check_data_train.end() && data_model->check_data_test.find(t) == data_model->check_data_test.end())
 						++frmean;
 				}
 			}
 			else
 			{
-				for (auto j = 0; j != data_model.entity_size; ++j)
+				for (auto j = 0; j != data_model->entity_size; ++j)
 				{
 					if (task_type == LinkPredictionHead || part == 1)
 						t.first.first = j;
@@ -145,7 +143,7 @@ public:
 
 					++rmean;
 
-					if (data_model.check_data_train.find(t) == data_model.check_data_train.end() && data_model.check_data_test.find(t) == data_model.check_data_test.end())
+					if (data_model->check_data_train.find(t) == data_model->check_data_train.end() && data_model->check_data_test.find(t) == data_model->check_data_test.end())
 					{
 						++frmean;
 						//if (frmean > hit_rank)
@@ -154,7 +152,7 @@ public:
 				}
 			}
 			if (frmean < hit_rank)
-				++result[6 + data_model.relation_type[data_model.data_test_true[i].second]];
+				++result[6 + data_model->relation_type[data_model->data_test_true[i].second]];
 
 			result[0] += rmean;
 			result[2] += frmean;
@@ -180,27 +178,27 @@ public:
 		double fhits = 0;
 		double rmrr = 0;
 		double fmrr = 0;
-		double total = data_model.data_test_true.size();
+		double total = data_model->data_test_true.size();
 
 		double arr_mean[20] = {0};
 		double arr_total[5] = {0};
 
 		vector<vector<double> > thread_data(parallel_thread, vector<double>(26));
 		thread* threads[parallel_thread];
-		size_t num_each_thread = data_model.data_test_true.size() / parallel_thread;
+		size_t num_each_thread = data_model->data_test_true.size() / parallel_thread;
 
-		for (auto i = data_model.data_test_true.begin(); i != data_model.data_test_true.end(); ++i)
+		for (auto i = data_model->data_test_true.begin(); i != data_model->data_test_true.end(); ++i)
 		{
-			++arr_total[data_model.relation_type[i->second]];
+			++arr_total[data_model->relation_type[i->second]];
 		}
 
-		ProgressBar prog_bar("Testing link prediction", data_model.data_test_true.size());
+		ProgressBar prog_bar("Testing link prediction", data_model->data_test_true.size());
 		mutex* progress_mtx = new mutex();
 		prog_bar.progress_begin();
 
 		for (auto i = 0; i < parallel_thread; ++i) {
 			if (i == parallel_thread - 1) {
-				threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, data_model.data_test_true.size() - i * num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
+				threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, data_model->data_test_true.size() - i * num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
 				continue;
 			}
 			threads[i] = new thread(&Model::test_batch, this, i * num_each_thread, num_each_thread, ref(thread_data[i]), hit_rank, part, ref(prog_bar.progress), progress_mtx);
@@ -283,13 +281,6 @@ public:
 		if (data_model != nullptr) {
 			delete data_model;
 		}
-	}
-
-public:
-
-	const DataModel &get_data_model() const
-	{
-		return data_model;
 	}
 
 public:
