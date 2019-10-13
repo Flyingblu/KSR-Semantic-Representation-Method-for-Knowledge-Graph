@@ -100,7 +100,7 @@ int main()
 
     get_entities_cluster(entities_clusters, "/home/anabur/data/save/3b_reindexed/cluster/", "/home/anabur/data/save/3b_reindexed/central_entities.data", CLUSTER_NUM);
 
-    ifstream triple_read("/home/anabur/data/save/3b_reindexed/triples.data", ios_base::binary);
+    ifstream triple_read("/home/anabur/data/save/3b_reindexed/training.data", ios_base::binary);
 
     size_t triple_size;
     triple_read.read((char *)&triple_size, sizeof(size_t));

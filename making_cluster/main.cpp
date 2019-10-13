@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include "/home/anabur/Github/include/PB/progress_bar.hpp"
 #define CLUSTER_NUM 8
-#define RADIUS 7
+#define RADIUS 8
 
 using namespace std;
 
@@ -34,7 +34,7 @@ int main() {
 	unordered_set<unsigned int> central_entities;
 	unordered_set<unsigned int> useless_entities;
 	vector<vector<unsigned int> > results(CLUSTER_NUM, vector<unsigned int>());
-    size_t entity_size = make_graph_from_file(graph, BASE_DIR + "/triples.data", BASE_DIR + "/entities.data", BASE_DIR + "/graph_size.data");
+    size_t entity_size = make_graph_from_file(graph, BASE_DIR + "/training.data", BASE_DIR + "/entities.data", BASE_DIR + "/graph_size.data");
     get_central_entities(central_entities, BASE_DIR + "/central_entities.data");
 	get_useless_entities(useless_entities, BASE_DIR + "/garbage_entity/orphan_and_leaves.data");
     bool* cluster = new bool[entity_size];
