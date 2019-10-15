@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	static void load(vector<Col<T> >& vmatin, ifstream& fin)
+	static void load(vector<Col<T>>& vmatin, ifstream& fin)
 	{
 		arma::uword n_size;
 		fin.read((char*)&n_size, sizeof(n_size));

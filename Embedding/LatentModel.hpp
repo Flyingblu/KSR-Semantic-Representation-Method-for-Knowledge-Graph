@@ -13,10 +13,10 @@
 class SFactorE
 {
 protected:
-	vector<vec> embedding_entity;
-	vector<vec> embedding_relation_head;
-	vector<vec> embedding_relation_tail;
-
+	fmat embedding_entity;
+	fmat embedding_relation_head;
+	fmat embedding_relation_tail;
+	
 public:
 	const int dim;
 	const double sigma;
@@ -24,7 +24,7 @@ public:
 public:
 	unsigned int factor_index(const unsigned int entity_id) const
 	{
-		const vec &entity = embedding_entity[entity_id];
+		const fvec entity = embedding_entity.col(entity_id);
 
 		uword re_index;
 		entity.max(re_index);
@@ -35,74 +35,84 @@ public:
 	SFactorE(int dim, unsigned int entity_count, unsigned int relation_count, double sigma)
 		: dim(dim), sigma(sigma)
 	{
-		embedding_entity.resize(entity_count);
-		for_each(embedding_entity.begin(), embedding_entity.end(),
-				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
+		embedding_entity.set_size(dim, entity_count);
+		for (unsigned int i = 0; i < entity_count; ++i)
+		{
+			fvec elem = normalise<fvec>(randu<fvec>(dim), 2);
+			embedding_entity.col(i) = elem;
+		}
 
-		embedding_relation_head.resize(relation_count);
-		for_each(embedding_relation_head.begin(), embedding_relation_head.end(),
-				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
+		embedding_relation_head.set_size(dim, relation_count);
+		embedding_relation_tail.set_size(dim, relation_count);
+		for (unsigned int i = 0; i < relation_count; ++i)
+		{
+			fvec elem = normalise<fvec>(randu<fvec>(dim), 2);
+			embedding_relation_head.col(i) = elem;
+			embedding_relation_tail.col(i) = elem;
+		}
 
-		embedding_relation_tail.resize(relation_count);
-		for_each(embedding_relation_tail.begin(), embedding_relation_tail.end(),
-				 [=](vec &elem) { elem = normalise(randu(dim), 2); });
 	}
 
 	double prob(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet)
 	{
-		vec &head = embedding_entity[triplet.first.first];
-		vec &tail = embedding_entity[triplet.first.second];
-		vec &relation_head = embedding_relation_head[triplet.second];
-		vec &relation_tail = embedding_relation_tail[triplet.second];
+		fvec head = embedding_entity.col(triplet.first.first);
+		fvec tail = embedding_entity.col(triplet.first.second);
+		fvec relation_head = embedding_relation_head.col(triplet.second);
+		fvec relation_tail = embedding_relation_tail.col(triplet.second);
 
-		vec head_feature = head % relation_head;
-		vec tail_feature = tail % relation_tail;
+		fvec head_feature = head % relation_head;
+		fvec tail_feature = tail % relation_tail;
 
 		return log(sum(head_feature % tail_feature)) * sigma - sum(abs(head_feature - tail_feature));
 	}
 
 	void train(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet, const double alpha)
 	{
-		vec &head = embedding_entity[triplet.first.first];
-		vec &tail = embedding_entity[triplet.first.second];
-		vec &relation_head = embedding_relation_head[triplet.second];
-		vec &relation_tail = embedding_relation_tail[triplet.second];
+		fvec head = embedding_entity.col(triplet.first.first);
+		fvec tail = embedding_entity.col(triplet.first.second);
+		fvec relation_head = embedding_relation_head.col(triplet.second);
+		fvec relation_tail = embedding_relation_tail.col(triplet.second);
 
-		vec head_feature = head % relation_head;
-		vec tail_feature = tail % relation_tail;
-		vec feature = head_feature % tail_feature;
-		vec grad = sign(head_feature - tail_feature);
+		fvec head_feature = head % relation_head;
+		fvec tail_feature = tail % relation_tail;
+		fvec feature = head_feature % tail_feature;
+		fvec grad = sign(head_feature - tail_feature);
 
 		head += -alpha * grad % relation_head + alpha * relation_head % tail_feature / sum(feature) * sigma;
 		relation_head += -alpha * grad % head + alpha * head % tail_feature / sum(feature) * sigma;
 		tail += alpha * grad % relation_tail + alpha * relation_tail % head_feature / sum(feature) * sigma;
 		relation_tail += alpha * grad % tail + alpha * tail % head_feature / sum(feature) * sigma;
 
-		head = normalise(max(head, ones(dim) / pow(dim, 5)), 2);
-		tail = normalise(max(tail, ones(dim) / pow(dim, 5)), 2);
-		relation_head = normalise(max(relation_head, ones(dim) / pow(dim, 5)), 2);
-		relation_tail = normalise(max(relation_tail, ones(dim) / pow(dim, 5)), 2);
+		head = normalise<fvec>(max(head, ones<fvec>(dim) / pow(dim, 5)), 2);
+		tail = normalise<fvec>(max(tail, ones<fvec>(dim) / pow(dim, 5)), 2);
+		relation_head = normalise<fvec>(max(relation_head, ones<fvec>(dim) / pow(dim, 5)), 2);
+		relation_tail = normalise<fvec>(max(relation_tail, ones<fvec>(dim) / pow(dim, 5)), 2);
+
+		embedding_entity.col(triplet.first.first) = head;
+		embedding_entity.col(triplet.first.second) = tail;
+		embedding_relation_head.col(triplet.second) = relation_head;
+		embedding_relation_tail.col(triplet.second) = relation_tail;
+ 	}
+
+public:
+	void save(const string &filename)
+	{
+		embedding_entity.save(filename + "entity.model", arma_binary);
+		embedding_relation_head.save(filename + "relation_head.model", arma_binary);
+		embedding_relation_tail.save(filename + "relation_tail.model", arma_binary);
+	}
+
+	void load(const string &filename)
+	{
+		embedding_entity.load(filename + "entity.model", arma_binary);
+		embedding_relation_head.load(filename + "relation_head.model", arma_binary);
+		embedding_relation_tail.load(filename + "relation_tail.model", arma_binary);
 	}
 
 public:
-	void save(ofstream &fout)
+	virtual fvec entity_representation(unsigned int entity_id) const
 	{
-		storage_vmat<double>::save(embedding_entity, fout);
-		storage_vmat<double>::save(embedding_relation_head, fout);
-		storage_vmat<double>::save(embedding_relation_tail, fout);
-	}
-
-	void load(ifstream &fin)
-	{
-		storage_vmat<double>::load(embedding_entity, fin);
-		storage_vmat<double>::load(embedding_relation_head, fin);
-		storage_vmat<double>::load(embedding_relation_tail, fin);
-	}
-
-public:
-	virtual vec entity_representation(unsigned int entity_id) const
-	{
-		return embedding_entity[entity_id];
+		return embedding_entity.col(entity_id);
 	}
 };
 
@@ -110,13 +120,13 @@ class MFactorE
 	: public Model
 {
 protected:
-	vector<SFactorE *> factors;
-	vector<vec> relation_space;
+	vector<SFactorE *> factors;;
+	vector<fvec> relation_space;
 	vector<mutex *> factors_mtx;
 	mutex acc_space_mtx;
 
 protected:
-	vector<vec> acc_space;
+	vector<fvec> acc_space;
 
 public:
 	const double margin;
@@ -151,13 +161,15 @@ public:
 		load_entity_relation_size(entity_path, relation_path);
 
 		relation_space.resize(this->relation_size);
-		for (vec &elem : relation_space)
+		std::cout << "Resized relation space" << std::endl;
+		for (fvec &elem : relation_space)
 		{
-			elem = normalise(ones(n_factor));
+			elem = normalise<fvec>(ones<fvec>(n_factor));
 		}
 
 		for (auto i = 0; i < n_factor; ++i)
 		{
+			std::cout << "Pushing back " << i << "th SFactorE. " << std::endl;
 			factors.push_back(new SFactorE(dim, this->entity_size, this->relation_size, sigma));
 			factors_mtx.push_back(new mutex());
 		}
@@ -181,6 +193,8 @@ public:
 		relation_file.read((char*)&this->relation_size, sizeof(this->relation_size));
 		entity_file.close();
 		relation_file.close();
+		std::cout << "Entity size: " << this->entity_size << std::endl;
+		std::cout << "Relation size: " << this->relation_size<< std::endl;
 	}
 
 	Col<int> factor_index(const unsigned int entity_id) const
@@ -199,9 +213,9 @@ public:
 		return factors[feature_id]->factor_index(entity_id);
 	}
 
-	vec get_error_vec(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) const
+	fvec get_error_vec(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) const
 	{
-		vec score(n_factor);
+		fvec score(n_factor);
 		auto i_score = score.begin();
 		for (auto factor : factors)
 		{
@@ -225,8 +239,8 @@ public:
 		if (prob_triplets(triplet) - prob_triplets(triplet_f) > margin)
 			return;
 
-		vec err = get_error_vec(triplet);
-		vec err_f = get_error_vec(triplet);
+		fvec err = get_error_vec(triplet);
+		fvec err_f = get_error_vec(triplet);
 
 		for (auto i = 0; i < n_factor; ++i)
 		{
@@ -244,50 +258,86 @@ public:
 	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
 	{
 		acc_space.resize(relation_size);
-		for (vec &elem : acc_space)
+		for (fvec &elem : acc_space)
 		{
-			elem = zeros(n_factor);
+			elem = zeros<fvec>(n_factor);
 		}
 
-		for (auto i: dataset) {
-			Model::load_dataset(i);
+		thread* load_dataset_thread;
+		Model::load_dataset_1(dataset[0], this->entity_size, this->relation_size);
+
+		for (int i = 1; i < dataset.size(); ++i) {
+
+			Model::switch_dataset();
+			if (i % 2) {
+				load_dataset_thread = new thread(&Model::load_dataset_2, this, dataset[i], this->entity_size, this->relation_size);
+			} else {
+				load_dataset_thread = new thread(&Model::load_dataset_1, this, dataset[i], this->entity_size, this->relation_size);
+			}
+
 			Model::train(parallel_thread, dataset);
+			load_dataset_thread->join();
+			delete load_dataset_thread;
 		}
 
 		for (auto i = 0; i < relation_size; ++i)
 		{
 			relation_space[i] =
-				normalise(max(-acc_space[i], ones(n_factor) / dim), 1);
+				normalise<fvec>(max(-acc_space[i], ones<fvec>(n_factor) / dim), 1);
 		}
 	}
 
 public:
 	virtual void save(const string &filename) override
 	{
-		ofstream fout(filename.c_str(), ios::binary);
-		storage_vmat<double>::save(relation_space, fout);
+		ofstream fout(filename + "relation_space.model", ios::binary);
+		storage_vmat<float>::save(relation_space, fout);
 		for (auto i = 0; i < n_factor; ++i)
 		{
-			factors[i]->save(fout);
+			factors[i]->save(filename);
 		}
 		fout.close();
 	}
 
 	virtual void load(const string &filename) override
 	{
+		ifstream fin(filename + "relation_space.model", ios::binary);
+		storage_vmat<float>::load(relation_space, fin);
+		for (auto i = 0; i < n_factor; ++i)
+		{
+			factors[i]->load(filename);
+		}
+		fin.close();
+	}
+	/*
+	virtual void save(const string &filename) override
+	{
+		ofstream fout(filename.c_str(), ios::binary);
+		storage_vmat<float>::save(relation_space, fout);
+		for (auto i = 0; i < n_factor; ++i)
+		{
+			factors[i]->save(fout);
+		}
+		fout.close();
+	}
+	*/
+	/*
+	virtual void load(const string &filename) override
+	{
 		ifstream fin(filename.c_str(), ios::binary);
-		storage_vmat<double>::load(relation_space, fin);
+		storage_vmat<float>::load(relation_space, fin);
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			factors[i]->load(fin);
 		}
 		fin.close();
 	}
+	*/
 
 public:
-	virtual vec entity_representation(unsigned int entity_id) const override
+	virtual fvec entity_representation(unsigned int entity_id) const override
 	{
-		vec rep_vec;
+		fvec rep_vec;
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			rep_vec = join_cols(rep_vec, factors[i]->entity_representation(entity_id));

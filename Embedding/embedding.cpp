@@ -18,7 +18,7 @@ int main()
     TaskType task = LinkPredictionHead;
     MFactorE model("/home/anabur/data/save/3b_reindexed/entities.data", "/home/anabur/data/save/3b_reindexed/properties.data", task, "/home/anabur/Github/logs/training_log/", 5, 0.01, 0.1, 0.01, 10, true);
     model.run(2000, 39, dataset);
-    model.save("/home/anabur/data/model/3b_reindexed.model");
+    model.save("/home/anabur/data/model/3b_reindexed/");
     // model.load("/home/anabur/data/model/latest-lexemes.model");
     // model.test_link_prediction(10, 0, 39);
     return 0;

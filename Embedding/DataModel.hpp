@@ -23,14 +23,19 @@ public:
 public:
 	vector<double> relation_tph;
 	vector<double> relation_hpt;
+public: 
+	mutex data_train_mtx;
+	mutex check_train_mtx;
+	mutex rel_heads_mtx;
+	mutex rel_tails_mtx;
 
 public:
-	DataModel(const Dataset *dataset, bool do_load_testing)
+	DataModel(const Dataset *dataset, bool do_load_testing, size_t entity_size, size_t relation_size): entity_size(entity_size), relation_size(relation_size)
 	{
 		// TODO: these two maps seem to be huge, see if we can optimize it.
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_heads;
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_tails;
-		load_training(dataset->base_dir + dataset->training, rel_heads, rel_tails);
+		load_training(dataset->base_dir + dataset->training, rel_heads, rel_tails, 3);
 		relation_hpt.resize(relation_size);
 		relation_tph.resize(relation_size);
 		for (auto i = 0; i != relation_size; ++i)
@@ -97,34 +102,41 @@ public:
 
 	void load_training(const string &file_path,
 					   map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_heads,
-					   map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_tails)
+					   map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_tails, int num_stream)
 	{
-		ifstream triple_file(file_path, ios_base::binary);
-
-		size_t triple_size;
-		triple_file.read((char *)&triple_size, sizeof(size_t));
-		// TODO: change api
-		ProgressBar prog_bar("Deserializing binary file to triples:", triple_size);
-		prog_bar.progress_begin();
-
-		for (prog_bar.progress = 0; prog_bar.progress < triple_size && triple_file; ++prog_bar.progress)
+		vector<ifstream*> streams(num_stream); 
+		for (int i = 0; i < num_stream; i++)
 		{
-
-			unsigned int tri_arr[3];
-			triple_file.read((char *)tri_arr, sizeof(unsigned int) * 3);
-
-			data_train.push_back(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
-			check_data_train.insert(make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]));
-
-			rel_heads[tri_arr[1]][tri_arr[0]].push_back(tri_arr[2]);
-			rel_tails[tri_arr[1]][tri_arr[2]].push_back(tri_arr[0]);
+			ifstream* fin = new ifstream(file_path, ios_base::binary);
+			streams[i] = fin;
 		}
-		triple_file.close();
-		prog_bar.progress_end();
+		
+		size_t triple_size;
+		streams[0]->read((char *)&triple_size, sizeof(size_t));
+		data_train.reserve(triple_size);
 
-		if (prog_bar.progress != triple_size)
+		size_t start = 1 * sizeof (size_t);
+		size_t range = triple_size / num_stream * sizeof(unsigned int) * 3;
+		
+
+		thread* threads[num_stream];
+		for (int i = 0; i < num_stream; ++i)
+		{	
+			if( i == num_stream - 1) 
+			{
+				threads[i] = new thread(&DataModel::load_train_slice, this, ref(streams[i]), start, triple_size * sizeof(unsigned int) * 3 - start, ref(rel_heads), ref(rel_tails), i);
+				continue;
+			}
+			threads[i] = new thread(&DataModel::load_train_slice, this, ref(streams[i]), start, range, ref(rel_heads), ref(rel_tails), i);
+			start += range;
+		}
+		
+		
+		for (int i = 0; i < num_stream; ++i)
 		{
-			cerr << "triple_deserialize: Something wrong in binary file reading. " << endl;
+			threads[i]->join();
+			delete threads[i];
+			delete streams[i];
 		}
 	}
 
@@ -180,5 +192,38 @@ public:
 			if (check_data_train.find(triplet) == check_data_train.end())
 				return;
 		}
+	}
+
+	void load_train_slice(ifstream* fin, size_t start, size_t range, 
+						  map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_heads, 
+						  map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_tails, 
+						  int slice_index)
+	{
+		fin->seekg(start, std::ios_base::beg);
+		for (unsigned int i = 0; i < range; ++i)
+		{
+			unsigned int tri_arr[3];
+			fin->read((char *)tri_arr, sizeof(unsigned int) * 3);
+
+			auto pr = make_pair(make_pair(tri_arr[0], tri_arr[2]), tri_arr[1]);
+
+			data_train_mtx.lock();
+			data_train.push_back(pr);
+			data_train_mtx.unlock();
+
+			check_train_mtx.lock();
+			check_data_train.insert(pr);
+			check_train_mtx.unlock();
+
+			rel_heads_mtx.lock();
+			rel_heads[tri_arr[1]][tri_arr[0]].push_back(tri_arr[2]);
+			rel_heads_mtx.unlock();
+
+			rel_tails_mtx.lock();
+			rel_tails[tri_arr[1]][tri_arr[2]].push_back(tri_arr[0]);
+			rel_tails_mtx.unlock();
+		}
+		fin->close();
+		cout << "read slice " << slice_index << "completed" << endl;
 	}
 };

@@ -13,6 +13,8 @@ using namespace arma;
 class Model
 {
 public:
+	const DataModel *data_model_1;
+	const DataModel *data_model_2;
 	const DataModel *data_model;
 	const TaskType task_type;
 	const bool be_deleted_data_model;
@@ -27,7 +29,7 @@ public:
 	Model(const TaskType &task_type,
 		  const string &logging_base_path, 
 		  const bool do_load_testing)
-		: data_model(nullptr), task_type(task_type),
+		: data_model(nullptr), data_model_1(nullptr), data_model_2(nullptr), task_type(task_type),
 		  logging(*(new ModelLogging(logging_base_path))),
 		  be_deleted_data_model(true)
 	{
@@ -38,11 +40,26 @@ public:
 
 public:
 
-	void load_dataset(Dataset* dataset) {
-		if (data_model != nullptr) {
+	void load_dataset_1(Dataset* dataset, size_t entity_size, size_t relation_size) {
+		if (data_model_1 != nullptr) {
 			delete data_model;
 		}
-		data_model = new DataModel(dataset, false);
+		data_model_1 = new DataModel(dataset, false, entity_size, relation_size);
+	}
+
+	void load_dataset_2(Dataset* dataset, size_t entity_size, size_t relation_size) {
+		if (data_model_2 != nullptr) {
+			delete data_model;
+		}
+		data_model_2 = new DataModel(dataset, false, entity_size, relation_size);
+	}
+	
+	void switch_dataset() {
+		if (data_model == nullptr) {
+			data_model = data_model_1;
+			return;
+		}
+		data_model = data_model == data_model_1 ? data_model_2: data_model_1;
 	}
 
 public:
@@ -294,12 +311,12 @@ public:
 		cout << "BAD";
 	}
 
-	virtual vec entity_representation(unsigned int entity_id) const
+	virtual fvec entity_representation(unsigned int entity_id) const
 	{
 		cout << "BAD";
 	}
 
-	virtual vec relation_representation(unsigned int relation_id) const
+	virtual fvec relation_representation(unsigned int relation_id) const
 	{
 		cout << "BAD";
 	}
