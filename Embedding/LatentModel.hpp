@@ -309,30 +309,7 @@ public:
 		}
 		fin.close();
 	}
-	/*
-	virtual void save(const string &filename) override
-	{
-		ofstream fout(filename.c_str(), ios::binary);
-		storage_vmat<float>::save(relation_space, fout);
-		for (auto i = 0; i < n_factor; ++i)
-		{
-			factors[i]->save(fout);
-		}
-		fout.close();
-	}
-	*/
-	/*
-	virtual void load(const string &filename) override
-	{
-		ifstream fin(filename.c_str(), ios::binary);
-		storage_vmat<float>::load(relation_space, fin);
-		for (auto i = 0; i < n_factor; ++i)
-		{
-			factors[i]->load(fin);
-		}
-		fin.close();
-	}
-	*/
+
 
 public:
 	virtual fvec entity_representation(unsigned int entity_id) const override

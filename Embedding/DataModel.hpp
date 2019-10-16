@@ -35,7 +35,7 @@ public:
 		// TODO: these two maps seem to be huge, see if we can optimize it.
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_heads;
 		map<unsigned int, map<unsigned int, vector<unsigned int>>> rel_tails;
-		load_training(dataset->base_dir + dataset->training, rel_heads, rel_tails, 3);
+		load_training(dataset->base_dir + dataset->training, rel_heads, rel_tails, 4);
 		relation_hpt.resize(relation_size);
 		relation_tph.resize(relation_size);
 		for (auto i = 0; i != relation_size; ++i)
@@ -116,7 +116,7 @@ public:
 		data_train.reserve(triple_size);
 
 		size_t start = 1 * sizeof (size_t);
-		size_t range = triple_size / num_stream * sizeof(unsigned int) * 3;
+		size_t range = triple_size / num_stream;
 		
 
 		thread* threads[num_stream];
@@ -124,11 +124,11 @@ public:
 		{	
 			if( i == num_stream - 1) 
 			{
-				threads[i] = new thread(&DataModel::load_train_slice, this, ref(streams[i]), start, triple_size * sizeof(unsigned int) * 3 - start, ref(rel_heads), ref(rel_tails), i);
+				threads[i] = new thread(&DataModel::load_train_slice, this, ref(streams[i]), start, triple_size - ((start - sizeof(size_t)) / (sizeof(unsigned int) * 3)), ref(rel_heads), ref(rel_tails), i);
 				continue;
 			}
 			threads[i] = new thread(&DataModel::load_train_slice, this, ref(streams[i]), start, range, ref(rel_heads), ref(rel_tails), i);
-			start += range;
+			start += range * sizeof(unsigned int) * 3;
 		}
 		
 		
@@ -199,6 +199,7 @@ public:
 						  map<unsigned int, map<unsigned int, vector<unsigned int>>> &rel_tails, 
 						  int slice_index)
 	{
+		cout << "read slice " << slice_index << ", start : " << (start - sizeof(size_t)) / (sizeof(unsigned int) * 3) << ", range : " << range << endl;
 		fin->seekg(start, std::ios_base::beg);
 		for (unsigned int i = 0; i < range; ++i)
 		{
@@ -224,6 +225,6 @@ public:
 			rel_tails_mtx.unlock();
 		}
 		fin->close();
-		cout << "read slice " << slice_index << "completed" << endl;
+		cout << "read slice " << slice_index << " completed" << endl;
 	}
 };

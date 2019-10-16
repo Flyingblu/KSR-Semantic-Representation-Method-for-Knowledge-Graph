@@ -42,14 +42,14 @@ public:
 
 	void load_dataset_1(Dataset* dataset, size_t entity_size, size_t relation_size) {
 		if (data_model_1 != nullptr) {
-			delete data_model;
+			delete data_model_1;
 		}
 		data_model_1 = new DataModel(dataset, false, entity_size, relation_size);
 	}
 
 	void load_dataset_2(Dataset* dataset, size_t entity_size, size_t relation_size) {
 		if (data_model_2 != nullptr) {
-			delete data_model;
+			delete data_model_2;
 		}
 		data_model_2 = new DataModel(dataset, false, entity_size, relation_size);
 	}
@@ -78,7 +78,7 @@ public:
 	virtual void train(int parallel_thread, vector<Dataset*>& dataset)
 	{
 		++epos;
-
+		cout << "train : " << epos << endl;
 		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
 		thread* threads[parallel_thread];
 
@@ -106,6 +106,7 @@ public:
 		while (total_epos-- > 0)
 		{
 			++prog_bar.progress;
+			cout << "total :" << total_epos << endl;
 			train(parallel_thread, dataset);
 		}
 		train(parallel_thread, dataset);
