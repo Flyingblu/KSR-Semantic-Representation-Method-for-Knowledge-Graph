@@ -16,7 +16,7 @@ protected:
 	fmat embedding_entity;
 	fmat embedding_relation_head;
 	fmat embedding_relation_tail;
-	
+
 public:
 	const int dim;
 	const double sigma;
@@ -50,7 +50,6 @@ public:
 			embedding_relation_head.col(i) = elem;
 			embedding_relation_tail.col(i) = elem;
 		}
-
 	}
 
 	double prob(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet)
@@ -92,21 +91,21 @@ public:
 		embedding_entity.col(triplet.first.second) = tail;
 		embedding_relation_head.col(triplet.second) = relation_head;
 		embedding_relation_tail.col(triplet.second) = relation_tail;
- 	}
-
-public:
-	void save(const string &filename)
-	{
-		embedding_entity.save(filename + "entity.model", arma_binary);
-		embedding_relation_head.save(filename + "relation_head.model", arma_binary);
-		embedding_relation_tail.save(filename + "relation_tail.model", arma_binary);
 	}
 
-	void load(const string &filename)
+public:
+	void save(const string &filename, unsigned int factor_id)
 	{
-		embedding_entity.load(filename + "entity.model", arma_binary);
-		embedding_relation_head.load(filename + "relation_head.model", arma_binary);
-		embedding_relation_tail.load(filename + "relation_tail.model", arma_binary);
+		embedding_entity.save(filename + to_string(factor_id) + "_entity.model", arma_binary);
+		embedding_relation_head.save(filename + to_string(factor_id) + "_relation_head.model", arma_binary);
+		embedding_relation_tail.save(filename + to_string(factor_id) + "_relation_tail.model", arma_binary);
+	}
+
+	void load(const string &filename, unsigned int factor_id)
+	{
+		embedding_entity.load(filename + to_string(factor_id) + "_entity.model", arma_binary);
+		embedding_relation_head.load(filename + to_string(factor_id) + "_relation_head.model", arma_binary);
+		embedding_relation_tail.load(filename + to_string(factor_id) + "_relation_tail.model", arma_binary);
 	}
 
 public:
@@ -120,7 +119,8 @@ class MFactorE
 	: public Model
 {
 protected:
-	vector<SFactorE *> factors;;
+	vector<SFactorE *> factors;
+	vector<Dataset *> dataset;
 	vector<fvec> relation_space;
 	vector<mutex *> factors_mtx;
 	mutex acc_space_mtx;
@@ -148,8 +148,10 @@ public:
 		double training_threshold,
 		double sigma,
 		int n_factor,
-		bool do_load_testing)
-		: Model(task_type, logging_base_path, do_load_testing),
+		vector<Dataset *> *datasets = nullptr,
+		int num_slice = 0,
+		Dataset *test_dataset = nullptr)
+		: Model(task_type, logging_base_path),
 		  dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";
@@ -158,13 +160,21 @@ public:
 		logging.record() << "\t[Training Threshold]\t" << training_threshold;
 		logging.record() << "\t[Factor Number]\t" << n_factor;
 
+		if (datasets != nullptr)
+		{
+			dataset = *datasets;
+		}
+
 		load_entity_relation_size(entity_path, relation_path);
 
-		relation_space.resize(this->relation_size);
-		std::cout << "Resized relation space" << std::endl;
-		for (fvec &elem : relation_space)
+		if (datasets != nullptr)
 		{
-			elem = normalise<fvec>(ones<fvec>(n_factor));
+			relation_space.resize(this->relation_size);
+			std::cout << "Resized relation space" << std::endl;
+			for (fvec &elem : relation_space)
+			{
+				elem = normalise<fvec>(ones<fvec>(n_factor));
+			}
 		}
 
 		for (auto i = 0; i < n_factor; ++i)
@@ -173,28 +183,53 @@ public:
 			factors.push_back(new SFactorE(dim, this->entity_size, this->relation_size, sigma));
 			factors_mtx.push_back(new mutex());
 		}
+
+		if (datasets != nullptr)
+		{
+			int start = 0;
+			int range = num_slice;
+
+			while (start < dataset.size())
+			{
+				if (start + range > dataset.size())
+				{
+					range = dataset.size() - start;
+				}
+				cout << "load_start : " << start << ", "
+					 << "load_end : " << range + start << endl;
+				Model::load_datasets(dataset, this->entity_size, this->relation_size, start, range);
+				start += range;
+			}
+		}
+		if (test_dataset != nullptr)
+		{
+			Model::load_test_dataset(test_dataset, this->entity_size, this->relation_size);
+		}
 	}
 
-	~MFactorE() {
-		for (auto i = factors.begin(); i != factors.end(); ++i) {
+	~MFactorE()
+	{
+		for (auto i = factors.begin(); i != factors.end(); ++i)
+		{
 			delete *i;
 		}
-		for (auto i = factors_mtx.begin(); i != factors_mtx.end(); ++i) {
+		for (auto i = factors_mtx.begin(); i != factors_mtx.end(); ++i)
+		{
 			delete *i;
 		}
 	}
 
 public:
-
-	void load_entity_relation_size(const string& entity_path, const string& relation_path) {
+	void load_entity_relation_size(const string &entity_path, const string &relation_path)
+	{
 		ifstream entity_file(entity_path, ios_base::binary);
 		ifstream relation_file(relation_path, ios_base::binary);
-		entity_file.read((char*)&this->entity_size, sizeof(this->entity_size));
-		relation_file.read((char*)&this->relation_size, sizeof(this->relation_size));
+		entity_file.read((char *)&this->entity_size, sizeof(this->entity_size));
+		relation_file.read((char *)&this->relation_size, sizeof(this->relation_size));
 		entity_file.close();
 		relation_file.close();
 		std::cout << "Entity size: " << this->entity_size << std::endl;
-		std::cout << "Relation size: " << this->relation_size<< std::endl;
+		std::cout << "Relation size: " << this->relation_size << std::endl;
 	}
 
 	Col<int> factor_index(const unsigned int entity_id) const
@@ -229,14 +264,13 @@ public:
 	{
 		return sum(get_error_vec(triplet) % relation_space[triplet.second]);
 	}
-	
-public:
-	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) override
-	{
-		pair<pair<unsigned int, unsigned int>, unsigned int> triplet_f;
-		data_model->sample_false_triplet(triplet, triplet_f);
 
-		if (prob_triplets(triplet) - prob_triplets(triplet_f) > margin)
+public:
+	virtual void train_triplet(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet, size_t index) override
+	{
+		pair<pair<unsigned int, unsigned int>, unsigned int> *triplet_f = data_model->sample_false_triplet(index);
+
+		if (prob_triplets(triplet) - prob_triplets(*triplet_f) > margin)
 			return;
 
 		fvec err = get_error_vec(triplet);
@@ -246,7 +280,7 @@ public:
 		{
 			factors_mtx[i]->lock();
 			factors[i]->train(triplet, n_factor * alpha * relation_space[triplet.second][i]);
-			factors[i]->train(triplet_f, -n_factor * alpha * relation_space[triplet.second][i]);
+			factors[i]->train(*triplet_f, -n_factor * alpha * relation_space[triplet.second][i]);
 			factors_mtx[i]->unlock();
 		}
 
@@ -255,7 +289,7 @@ public:
 		acc_space_mtx.unlock();
 	}
 
-	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
+	virtual void train(int parallel_thread, vector<Dataset *> &dataset) override
 	{
 		acc_space.resize(relation_size);
 		for (fvec &elem : acc_space)
@@ -263,21 +297,12 @@ public:
 			elem = zeros<fvec>(n_factor);
 		}
 
-		thread* load_dataset_thread;
-		Model::load_dataset_1(dataset[0], this->entity_size, this->relation_size);
-
-		for (int i = 1; i < dataset.size(); ++i) {
-
-			Model::switch_dataset();
-			if (i % 2) {
-				load_dataset_thread = new thread(&Model::load_dataset_2, this, dataset[i], this->entity_size, this->relation_size);
-			} else {
-				load_dataset_thread = new thread(&Model::load_dataset_1, this, dataset[i], this->entity_size, this->relation_size);
-			}
-
+		bool cont = true;
+		Model::zero_dataset_cur();
+		while (cont)
+		{
+			cont = Model::switch_dataset();
 			Model::train(parallel_thread, dataset);
-			load_dataset_thread->join();
-			delete load_dataset_thread;
 		}
 
 		for (auto i = 0; i < relation_size; ++i)
@@ -294,7 +319,7 @@ public:
 		storage_vmat<float>::save(relation_space, fout);
 		for (auto i = 0; i < n_factor; ++i)
 		{
-			factors[i]->save(filename);
+			factors[i]->save(filename, i);
 		}
 		fout.close();
 	}
@@ -305,11 +330,10 @@ public:
 		storage_vmat<float>::load(relation_space, fin);
 		for (auto i = 0; i < n_factor; ++i)
 		{
-			factors[i]->load(filename);
+			factors[i]->load(filename, i);
 		}
 		fin.close();
 	}
-
 
 public:
 	virtual fvec entity_representation(unsigned int entity_id) const override

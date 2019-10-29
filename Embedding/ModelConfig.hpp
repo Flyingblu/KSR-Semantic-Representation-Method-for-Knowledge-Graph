@@ -4,34 +4,41 @@
 class Dataset
 {
 public:
-	const string	base_dir;
-	const string	training;
-	const string	testing;
-	const string	log;
-	const string	name;
-	const bool	self_false_sampling;
+	const string base_dir;
+	const string training;
+	const string testing;
+	const string rel_type;
+	const vector<string> training_false;
+	const string log;
+	const string name;
+	const bool self_false_sampling;
 
 public:
-	Dataset(const string& name,
-		const string& base_dir,
-		const string& training,
-		const string& testing,
-		const string& log,
-		const bool& self_false_sampling)
-		:name(name),
-		base_dir(base_dir),
-		training(training),
-		testing(testing),
-		log(log),
-		self_false_sampling(self_false_sampling)
-	{}
+	Dataset(const string &name,
+			const string &base_dir,
+			const string &training,
+			const string &testing,
+			const string &rel_type, 
+			const vector<string> &training_false,
+			const string &log,
+			const bool &self_false_sampling)
+		: name(name),
+		  base_dir(base_dir),
+		  training(training),
+		  testing(testing),
+		  rel_type(rel_type), 
+		  training_false(training_false),
+		  log(log),
+		  self_false_sampling(self_false_sampling)
+	{
+	}
 };
 
 enum TaskType
 {
 	General,
 	LinkPredictionHead,
-	LinkPredictionTail, 
+	LinkPredictionTail,
 	LinkPredictionRelation,
 	LinkPredictionHeadZeroShot,
 	LinkPredictionTailZeroShot,
@@ -42,7 +49,7 @@ enum TaskType
 
 inline string TaskTypeName(TaskType task_type)
 {
-	switch(task_type)
+	switch (task_type)
 	{
 	case LinkPredictionHead:
 		return "LinkPredictionHead";
@@ -65,50 +72,50 @@ protected:
 	ofstream fout;
 
 public:
-	ModelLogging(const string& base_dir)
+	ModelLogging(const string &base_dir)
 	{
 		const time_t log_time = time(nullptr);
-		struct tm* current_time = localtime(&log_time);
+		struct tm *current_time = localtime(&log_time);
 		stringstream ss;
-		ss<<1900 + current_time->tm_year<<"-";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_mon + 1<<"-";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_mday<<" ";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_hour<<".";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_min<<".";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_sec;
+		ss << 1900 + current_time->tm_year << "-";
+		ss << setfill('0') << setw(2) << current_time->tm_mon + 1 << "-";
+		ss << setfill('0') << setw(2) << current_time->tm_mday << " ";
+		ss << setfill('0') << setw(2) << current_time->tm_hour << ".";
+		ss << setfill('0') << setw(2) << current_time->tm_min << ".";
+		ss << setfill('0') << setw(2) << current_time->tm_sec;
 
 		fout.open((base_dir + ss.str() + ".log").c_str());
-		fout<<'['<<ss.str()<<']'<<'\t'<<"Starting...";
+		fout << '[' << ss.str() << ']' << '\t' << "Starting...";
 	}
 
-	ModelLogging& record()
+	ModelLogging &record()
 	{
 		const time_t log_time = time(nullptr);
-		struct tm* current_time = localtime(&log_time);
+		struct tm *current_time = localtime(&log_time);
 		stringstream ss;
-		ss<<1900 + current_time->tm_year<<"-";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_mon + 1<<"-";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_mday<<" ";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_hour<<".";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_min<<".";
-		ss<<setfill('0')<<setw(2)<<current_time->tm_sec;
+		ss << 1900 + current_time->tm_year << "-";
+		ss << setfill('0') << setw(2) << current_time->tm_mon + 1 << "-";
+		ss << setfill('0') << setw(2) << current_time->tm_mday << " ";
+		ss << setfill('0') << setw(2) << current_time->tm_hour << ".";
+		ss << setfill('0') << setw(2) << current_time->tm_min << ".";
+		ss << setfill('0') << setw(2) << current_time->tm_sec;
 
-		fout<<endl;
-		fout<<'['<<ss.str()<<']'<<'\t';
-		
+		fout << endl;
+		fout << '[' << ss.str() << ']' << '\t';
+
 		return *this;
 	}
 
-	template<typename T>
-	ModelLogging& operator << (T things)
+	template <typename T>
+	ModelLogging &operator<<(T things)
 	{
-		fout<<things;
+		fout << things;
 		return *this;
 	}
 
 	~ModelLogging()
 	{
-		fout<<endl;
+		fout << endl;
 		fout.close();
 	}
 };
