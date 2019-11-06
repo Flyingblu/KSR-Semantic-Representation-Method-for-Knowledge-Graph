@@ -24,3 +24,6 @@ K-means/k_means
 K-means/main
 Embedding/embedding
 entities_to_triples_cluster/entities_to_triples_cluster
+data/
+Embedding/packages/
+Embedding/x64/

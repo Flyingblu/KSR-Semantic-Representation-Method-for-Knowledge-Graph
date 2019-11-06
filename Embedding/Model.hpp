@@ -95,7 +95,7 @@ public:
 		++epos;
 		cout << "train : " << epos << endl;
 		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
-		thread *threads[parallel_thread];
+		vector<thread *> threads(parallel_thread);
 
 		for (auto i = 0; i < parallel_thread; ++i)
 		{
@@ -208,7 +208,7 @@ public:
 		double arr_total[5] = {0};
 
 		vector<vector<double>> thread_data(parallel_thread, vector<double>(26));
-		thread *threads[parallel_thread];
+		vector<thread *> threads(parallel_thread);
 		size_t num_each_thread = test_data_model->data_test_true.size() / parallel_thread;
 
 		for (auto i = test_data_model->data_test_true.begin(); i != test_data_model->data_test_true.end(); ++i)
@@ -327,10 +327,14 @@ public:
 	virtual fvec entity_representation(unsigned int entity_id) const
 	{
 		cout << "BAD";
+		fvec a;
+		return a;
 	}
 
 	virtual fvec relation_representation(unsigned int relation_id) const
 	{
 		cout << "BAD";
+		fvec a;
+		return a;
 	}
 };
