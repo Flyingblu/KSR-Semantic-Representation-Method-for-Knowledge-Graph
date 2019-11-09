@@ -30,14 +30,14 @@
     <ClInclude Include="Import.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="LatentModel.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Model.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\RDF_parser\progress_bar.hpp">
       <Filter>Wheels</Filter>
+    </ClInclude>
+    <ClInclude Include="LatentModel_af.hpp">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
