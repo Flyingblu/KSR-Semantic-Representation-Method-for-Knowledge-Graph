@@ -96,11 +96,11 @@ int main()
     //vector<vector<tuple<unsigned int, unsigned int, unsigned int>>> triples_clusters(CLUSTER_NUM);
     vector<tuple<unsigned int, unsigned int, unsigned int>> triples(CLUSTER_NUM);
     vector<unsigned int> triplet_cluster_size(CLUSTER_NUM); //vector storing size of every triple cluster
-    string triple_cluster_base_dir = "/home/anabur/data/save/3b_reindexed/triples_cluster/";
+    string triple_cluster_base_dir = "/home/anabur/data/save/latest-lexemes/triples_cluster/";
 
-    get_entities_cluster(entities_clusters, "/home/anabur/data/save/3b_reindexed/cluster/", "/home/anabur/data/save/3b_reindexed/central_entities.data", CLUSTER_NUM);
+    get_entities_cluster(entities_clusters, "/home/anabur/data/save/latest-lexemes/cluster/", "/home/anabur/data/save/latest-lexemes/central_entities.data", CLUSTER_NUM);
 
-    ifstream triple_read("/home/anabur/data/save/3b_reindexed/training.data", ios_base::binary);
+    ifstream triple_read("/home/anabur/data/save/latest-lexemes/training_.data", ios_base::binary);
 
     size_t triple_size;
     triple_read.read((char *)&triple_size, sizeof(size_t));

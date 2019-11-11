@@ -41,6 +41,7 @@ public:
 		af::array head_feature = head * relation_head;
 		af::array tail_feature = tail * relation_tail;
 
+		cout << "Prob" << endl;
 		// Unverified
 		return log(af::sum<float>(head_feature * tail_feature)) * sigma - af::sum<float>(af::abs(head_feature - tail_feature));
 	}
@@ -58,6 +59,7 @@ public:
 		af::array grad = af::sign(head_feature - tail_feature);
 		grad = -(grad - 0.5) * 2;
 
+		cout << "Train" << endl;
 		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum<float>(feature) * sigma;
 		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum<float>(feature) * sigma;
 		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum<float>(feature) * sigma;
@@ -78,10 +80,44 @@ public:
 public:
 	void save(const string& filename, unsigned int factor_id)
 	{
+		string entity_filestr = filename + to_string(factor_id) + "_entity.model";
+		const char* entity_filename = entity_filestr.c_str();
+		string entity_keystr = "entity";
+		const char* entity_key = entity_keystr.c_str();
+		af::saveArray(entity_key, embedding_entity, entity_filename);
+
+		string rel_head_filestr = filename + to_string(factor_id) + "_relation_head.model";
+		const char* rel_head_filename = rel_head_filestr.c_str();
+		string rel_head_keystr = "rel_head";
+		const char* rel_head_key = rel_head_keystr.c_str();
+		af::saveArray(rel_head_key, embedding_relation_head, rel_head_filename);
+
+		string rel_tail_filestr = filename + to_string(factor_id) + "_relation_tail.model";
+		const char* rel_tail_filename = rel_tail_filestr.c_str();
+		string rel_tail_keystr = "rel_tail";
+		const char* rel_tail_key = rel_tail_keystr.c_str();
+		af::saveArray(rel_tail_key ,embedding_relation_head, rel_tail_filename);
 	}
 
 	void load(const string& filename, unsigned int factor_id)
 	{
+		string entity_filestr = filename + to_string(factor_id) + "_entity.model";
+		const char* entity_filename = entity_filestr.c_str();
+		string entity_keystr = "rel_tail";
+		const char* entity_key = entity_keystr.c_str();
+		embedding_entity = af::readArray(entity_filename, entity_key);
+
+		string rel_head_filestr = filename + to_string(factor_id) + "_relation_head.model";
+		const char* rel_head_filename = rel_head_filestr.c_str();
+		string rel_head_keystr = "rel_head";
+		const char* rel_head_key = rel_head_keystr.c_str();
+		embedding_relation_head = af::readArray(rel_head_filename, rel_head_key);
+
+		string rel_tail_filestr = filename + to_string(factor_id) + "_relation_tail.model";
+		const char* rel_tail_filename = rel_tail_filestr.c_str();
+		string rel_tail_keystr = "rel_tail";
+		const char* rel_tail_key = rel_tail_keystr.c_str();
+		embedding_relation_tail = af::readArray(rel_tail_filename, rel_tail_key);
 	}
 };
 

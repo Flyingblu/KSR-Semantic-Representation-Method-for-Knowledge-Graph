@@ -195,6 +195,11 @@ public:
 	void
 	test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1)
 	{
+		best_link_mean = 1e10;
+		best_link_hitatten = 0;
+		best_link_fmean = 1e10;
+		best_link_fhitatten = 0;
+		
 		double mean = 0;
 		double hits = 0;
 		double fmean = 0;
