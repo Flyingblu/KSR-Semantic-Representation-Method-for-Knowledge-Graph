@@ -9,6 +9,8 @@
 #include <boost/algorithm/string.hpp>
 #include <cctype>
 #include <mutex>
+#define NOMINMAX
+#undef max
 
 class AF_SFactorE
 {
@@ -41,7 +43,7 @@ public:
 		af::array head_feature = head * relation_head;
 		af::array tail_feature = tail * relation_tail;
 
-		cout << "Prob" << endl;
+		//cout << "Prob" << endl;
 		// Unverified
 		return log(af::sum<float>(head_feature * tail_feature)) * sigma - af::sum<float>(af::abs(head_feature - tail_feature));
 	}
@@ -59,7 +61,7 @@ public:
 		af::array grad = af::sign(head_feature - tail_feature);
 		grad = -(grad - 0.5) * 2;
 
-		cout << "Train" << endl;
+		//cout << "Train" << endl;
 		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum<float>(feature) * sigma;
 		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum<float>(feature) * sigma;
 		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum<float>(feature) * sigma;
@@ -103,7 +105,7 @@ public:
 	{
 		string entity_filestr = filename + to_string(factor_id) + "_entity.model";
 		const char* entity_filename = entity_filestr.c_str();
-		string entity_keystr = "rel_tail";
+		string entity_keystr = "entity";
 		const char* entity_key = entity_keystr.c_str();
 		embedding_entity = af::readArray(entity_filename, entity_key);
 
