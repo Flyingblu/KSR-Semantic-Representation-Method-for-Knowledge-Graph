@@ -43,7 +43,7 @@ public:
 
 		cout << "Prob" << endl;
 		// Unverified
-		return log(af::sum<float>(head_feature * tail_feature)) * sigma - af::sum<float>(af::abs(head_feature - tail_feature));
+		return log(af::sum<float>(eval(head_feature * tail_feature))) * sigma - af::sum<float>(eval(af::abs(head_feature - tail_feature)));
 	}
 
 	void train(const pair<pair<unsigned int, unsigned int>, unsigned int>& triplet, const double alpha)
