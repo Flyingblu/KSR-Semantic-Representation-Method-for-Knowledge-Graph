@@ -62,6 +62,7 @@ public:
 		fvec head_feature = head % relation_head;
 		fvec tail_feature = tail % relation_tail;
 
+		
 		return log(sum(head_feature % tail_feature)) * sigma - sum(abs(head_feature - tail_feature));
 	}
 
@@ -76,7 +77,7 @@ public:
 		fvec tail_feature = tail % relation_tail;
 		fvec feature = head_feature % tail_feature;
 		fvec grad = sign(head_feature - tail_feature);
-
+		
 		head += -alpha * grad % relation_head + alpha * relation_head % tail_feature / sum(feature) * sigma;
 		relation_head += -alpha * grad % head + alpha * head % tail_feature / sum(feature) * sigma;
 		tail += alpha * grad % relation_tail + alpha * relation_tail % head_feature / sum(feature) * sigma;
@@ -272,7 +273,7 @@ public:
 
 		if (prob_triplets(triplet) - prob_triplets(*triplet_f) > margin)
 			return;
-
+			
 		fvec err = get_error_vec(triplet);
 		fvec err_f = get_error_vec(triplet);
 

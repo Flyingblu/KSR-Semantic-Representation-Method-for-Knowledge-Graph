@@ -93,7 +93,7 @@ public:
 	virtual void train(int parallel_thread, vector<Dataset *> &dataset)
 	{
 		++epos;
-		cout << "train : " << epos << endl;
+		//cout << "train : " << epos << endl;
 		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
 		vector<thread *> threads(parallel_thread);
 

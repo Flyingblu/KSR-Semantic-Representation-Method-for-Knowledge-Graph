@@ -100,6 +100,10 @@ public:
 	void load_relation_type(const string &path)
 	{
 		ifstream file(path, ios::binary);
+		if (file.is_open())
+		{
+			cout << path << " relation type open sucessfully" << endl;
+		}
 		auto size = relation_type.size();
 		file.read((char *)&size, sizeof(size));
 		relation_type.reserve(size);
