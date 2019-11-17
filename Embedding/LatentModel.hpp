@@ -144,6 +144,7 @@ public:
 		const string &relation_path,
 		const TaskType &task_type,
 		const string &logging_base_path,
+		const string &save_path,
 		int dim,
 		double alpha,
 		double training_threshold,
@@ -152,7 +153,7 @@ public:
 		vector<Dataset *> *datasets = nullptr,
 		int num_slice = 0,
 		Dataset *test_dataset = nullptr)
-		: Model(task_type, logging_base_path),
+		: Model(task_type, logging_base_path, save_path),
 		  dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";
@@ -168,7 +169,7 @@ public:
 
 		load_entity_relation_size(entity_path, relation_path);
 
-		if (datasets != nullptr)
+		if (datasets != nullptr) 
 		{
 			relation_space.resize(this->relation_size);
 			std::cout << "Resized relation space" << std::endl;
@@ -316,6 +317,9 @@ public:
 public:
 	virtual void save(const string &filename) override
 	{
+		ofstream fout_1(filename + "saving_status.data", ios::binary);
+		fout_1.write((char*)&epos, sizeof(long long));
+		fout_1.close();
 		ofstream fout(filename + "relation_space.model", ios::binary);
 		storage_vmat<float>::save(relation_space, fout);
 		for (auto i = 0; i < n_factor; ++i)
@@ -327,6 +331,9 @@ public:
 
 	virtual void load(const string &filename) override
 	{
+		ifstream fin_1(filename + "saving_status.data", ios::binary);
+		fin_1.read((char*)&epos, sizeof(long long));
+		fin_1.close();
 		ifstream fin(filename + "relation_space.model", ios::binary);
 		storage_vmat<float>::load(relation_space, fin);
 		for (auto i = 0; i < n_factor; ++i)

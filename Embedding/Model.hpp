@@ -23,13 +23,18 @@ public:
 	ModelLogging &logging;
 
 public:
-	int epos;
+	long long epos;
+
+public:
+	const string save_path;
 
 public:
 	Model(const TaskType &task_type,
-		  const string &logging_base_path)
+		  const string &logging_base_path,
+		  const string & save_path)
 		: task_type(task_type),
-		  logging(*(new ModelLogging(logging_base_path)))
+		  logging(*(new ModelLogging(logging_base_path))),
+		  save_path(save_path)
 	{
 		epos = 0;
 		std::cout << "Ready" << endl;
@@ -92,7 +97,6 @@ public:
 
 	virtual void train(int parallel_thread, vector<Dataset *> &dataset)
 	{
-		++epos;
 		//cout << "train : " << epos << endl;
 		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
 		vector<thread *> threads(parallel_thread);
@@ -119,12 +123,23 @@ public:
 		logging.record() << "\t[Epos]\t" << total_epos;
 
 		--total_epos;
-
+		if (epos != 0)
+		{
+			total_epos -= epos;
+		}
+		cout << endl;
+		cout << "start training from Round : " << epos << endl;
 		ProgressBar prog_bar("Training", total_epos);
 		prog_bar.progress_begin();
 		while (total_epos-- > 0)
 		{
 			++prog_bar.progress;
+			if (!(prog_bar.progress % 100))
+			{
+				cout << prog_bar.progress << "round saveing " << endl;
+				epos = prog_bar.progress;
+				save(save_path);
+			}
 			train(parallel_thread, dataset);
 		}
 		train(parallel_thread, dataset);
