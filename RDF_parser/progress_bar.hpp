@@ -10,7 +10,7 @@
 #define progress_bar_hpp
 
 #include <sys/types.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <string>

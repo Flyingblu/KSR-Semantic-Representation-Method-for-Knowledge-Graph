@@ -25,7 +25,7 @@ void ProgressBar::detect_progress()
   ofstream read_speed_log;
   ofstream cpu_log;
 
-  string pid = to_string(getpid());
+  string pid = to_string(_getpid());
   string proc_mem_path = "/proc/" + pid + "/statm";
   string proc_read_path = "/proc/" + pid + "/io";
   string proc_cpu_path = "/proc/" + pid + "/stat";
@@ -37,7 +37,7 @@ void ProgressBar::detect_progress()
     memory_log.open(this->save_path + "memory_usage.log");
     read_speed_log.open(this->save_path + "read_speed.log");
     cpu_log.open(this->save_path + "cpu.log");
-    cpu_log << sysconf(_SC_CLK_TCK) << endl;
+    //cpu_log << sysconf(_SC_CLK_TCK) << endl;
   }
 
   auto detect = [&]() -> void {

@@ -27,3 +27,8 @@ entities_to_triples_cluster/entities_to_triples_cluster
 data/
 Embedding/packages/
 Embedding/x64/
+
+Local_file/
+*.p7s
+
+Embedding_af/packages

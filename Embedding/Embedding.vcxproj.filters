@@ -9,12 +9,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Wheels">
+      <UniqueIdentifier>{5d56c7f5-bfb6-4ce0-8730-2565a056150a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Wheels">
-      <UniqueIdentifier>{5d56c7f5-bfb6-4ce0-8730-2565a056150a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,9 +35,6 @@
     </ClInclude>
     <ClInclude Include="..\RDF_parser\progress_bar.hpp">
       <Filter>Wheels</Filter>
-    </ClInclude>
-    <ClInclude Include="LatentModel_af.hpp">
-      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
