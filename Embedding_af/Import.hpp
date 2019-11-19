@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-//#include <armadillo>
+#include <armadillo>
 #include <arrayfire.h>
 #include <map>
 #include <set>

@@ -71,8 +71,32 @@ public:
 		*/
 	}
 
-	void train(const af::array& triplet, const double alpha)
+	void train(const af::array& new_mat_triplet, const double alpha)
 	{
+		af::dim4 dim_arr = new_mat_triplet.dims();
+		size_t batch_size = dim_arr[1];
+		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1));
+		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1));
+		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1));
+
+		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
+		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
+		af::array relation_head = embedding_relation_head(af::seq(0, dim - 1), relation_index);
+		af::array relation_tail = embedding_relation_tail(af::seq(0, dim - 1), relation_index);
+
+		af::array head_feature = head * relation_head;
+		af::array tail_feature = tail * relation_tail;
+		af::array feature = head_feature * tail_feature;
+		af::array grad = af::sign(head_feature - tail_feature);
+		grad = -(grad - 0.5) * 2;
+
+		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum<float>(feature) * sigma;
+		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum<float>(feature) * sigma;
+		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum<float>(feature) * sigma;
+		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::sum(feature, 0) * sigma;
+
+
+		/*
 		af::index first(triplet(0).copy());
 		af::index second(triplet(1).copy());
 		af::index third(triplet(2).copy());
@@ -103,6 +127,7 @@ public:
 		embedding_entity(af::seq(0, dim - 1), third) = tail;
 		embedding_relation_head(af::seq(0, dim - 1), second) = relation_head;
 		embedding_relation_tail(af::seq(0, dim - 1), second) = relation_tail;
+		*/
 	}
 
 public:
@@ -343,7 +368,6 @@ public:
 		for (auto i = 0; i < batch_size; ++i)
 		{
 			af::index i_index(i);
-			af::
 			if(bool_result(0, i_index) == 0)
 			new_mat_triplet(0, new_index) = mat_triplet(0, i_index);
 			new_mat_triplet(1, new_index) = mat_triplet(1, i_index);
