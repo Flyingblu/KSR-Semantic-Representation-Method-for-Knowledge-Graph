@@ -38,9 +38,9 @@ public:
 	{
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = mat_triplet(0, af::seq(0, batch_size - 1));
-		af::array tail_index = mat_triplet(2, af::seq(0, batch_size - 1));
-		af::array relation_index = mat_triplet(1, af::seq(0, batch_size - 1));
+		af::array head_index = mat_triplet(0, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array tail_index = mat_triplet(2, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array relation_index = mat_triplet(1, af::seq(0, batch_size - 1), af::dtype::u32);
 
 		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
 		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
@@ -75,9 +75,9 @@ public:
 	{
 		af::dim4 dim_arr = new_mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1));
-		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1));
-		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1));
+		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1), af::dtype::u32);
 
 		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
 		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
@@ -90,12 +90,20 @@ public:
 		af::array grad = af::sign(head_feature - tail_feature);
 		grad = -(grad - 0.5) * 2;
 
-		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum<float>(feature) * sigma;
-		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum<float>(feature) * sigma;
-		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum<float>(feature) * sigma;
+		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum(feature, 0) * sigma;
+		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum(feature, 0) * sigma;
+		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum(feature, 0) * sigma;
 		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::sum(feature, 0) * sigma;
 
-
+		// TODO: add normalise algorithm
+		
+		head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		
+		
+		
 		/*
 		af::index first(triplet(0).copy());
 		af::index second(triplet(1).copy());

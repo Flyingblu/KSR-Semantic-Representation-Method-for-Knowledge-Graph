@@ -135,9 +135,9 @@
     <ClInclude Include="..\RDF_parser\progress_bar.hpp" />
     <ClInclude Include="DataModel.hpp" />
     <ClInclude Include="Import.hpp" />
+    <ClInclude Include="LatentModel.hpp" />
     <ClInclude Include="Model.hpp" />
     <ClInclude Include="ModelConfig.hpp" />
-    <ClInclude Include="LatentModel_af.hpp" />
     <ClInclude Include="Storage.hpp" />
   </ItemGroup>
   <ItemGroup>
