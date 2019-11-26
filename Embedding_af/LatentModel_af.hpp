@@ -38,9 +38,9 @@ public:
 	{
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = mat_triplet(0, af::seq(0, batch_size - 1), af::dtype::u32);
-		af::array tail_index = mat_triplet(2, af::seq(0, batch_size - 1), af::dtype::u32);
-		af::array relation_index = mat_triplet(1, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array head_index = mat_triplet(0, af::seq(0, batch_size - 1));
+		af::array tail_index = mat_triplet(2, af::seq(0, batch_size - 1));
+		af::array relation_index = mat_triplet(1, af::seq(0, batch_size - 1));
 
 		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
 		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
@@ -50,34 +50,20 @@ public:
 		af::array head_feature = head * relation_head;
 		af::array tail_feature = tail * relation_tail;
 
-		af::array result = af::log(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0));
-	
+		//af::array result = af::log(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0));
+		
+		//Test version
+		af::array result = af::log(-(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0)));
 		return result;
-		/*
-		af::index first(triplet(0).copy());
-		af::index second(triplet(1).copy());
-		af::index third(triplet(2).copy());
-		af::array head = embedding_entity(af::seq(0, dim - 1), first);
-		af::array tail = embedding_entity(af::seq(0, dim - 1), third);
-		af::array relation_head = embedding_relation_head(af::seq(0, dim - 1), second);
-		af::array relation_tail = embedding_relation_tail(af::seq(0, dim - 1), second);
-
-		af::array head_feature = head * relation_head;
-		af::array tail_feature = tail * relation_tail;
-
-		//cout << "Prob" << endl;
-		// Unverified
-		return log(af::sum<float>(head_feature * tail_feature)) * sigma - af::sum<float>(af::abs(head_feature - tail_feature));
-		*/
 	}
 
-	void train(const af::array& new_mat_triplet, const double alpha)
+	void train(const af::array& new_mat_triplet, af::array alpha)
 	{
 		af::dim4 dim_arr = new_mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1), af::dtype::u32);
-		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1), af::dtype::u32);
-		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1), af::dtype::u32);
+		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1));
+		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1));
+		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1));
 
 		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
 		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
@@ -89,53 +75,36 @@ public:
 		af::array feature = head_feature * tail_feature;
 		af::array grad = af::sign(head_feature - tail_feature);
 		grad = -(grad - 0.5) * 2;
+		
+		
+		//Test
+		alpha = af::tile(alpha, dim);
+		/*
+		af::dim4 dim_alpha = alpha.dims();
+		cout << "dim of alpha :" << dim_alpha[0] << ", " << dim_alpha[1];
+		af::dim4 dim_rel_head = relation_head.dims();
+		*/
+		//Real
+		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::tile(af::sum(feature, 0), dim) * sigma;
+		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::tile(af::sum(feature, 0), dim) * sigma;
+		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
+		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 
-		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum(feature, 0) * sigma;
-		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum(feature, 0) * sigma;
-		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum(feature, 0) * sigma;
-		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::sum(feature, 0) * sigma;
-
-		// TODO: add normalise algorithm
+		//TODO: add normalise algorithm
 		
 		head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 		tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 		relation_head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 		relation_tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 		
+
+		//TODO: solve the race condition, calulate the mean of same entity vector
+		embedding_entity(af::seq(0, dim - 1), head_index) = head;
+		embedding_entity(af::seq(0, dim - 1), tail_index) = tail;
+		embedding_relation_head(af::seq(0, dim - 1), relation_index) = relation_head;
+		embedding_relation_tail(af::seq(0, dim - 1), relation_index) = relation_tail;
 		
-		
-		/*
-		af::index first(triplet(0).copy());
-		af::index second(triplet(1).copy());
-		af::index third(triplet(2).copy());
-		af::array head = embedding_entity(af::seq(0, dim - 1), first);
-		af::array tail = embedding_entity(af::seq(0, dim - 1), third);
-		af::array relation_head = embedding_relation_head(af::seq(0, dim - 1), second);
-		af::array relation_tail = embedding_relation_tail(af::seq(0, dim - 1), second);
 
-		af::array head_feature = head * relation_head;
-		af::array tail_feature = tail * relation_tail;
-		af::array feature = head_feature * tail_feature;
-		af::array grad = af::sign(head_feature - tail_feature);
-		grad = -(grad - 0.5) * 2;
-
-		//cout << "Train" << endl;
-		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::sum<float>(feature) * sigma;
-		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::sum<float>(feature) * sigma;
-		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::sum<float>(feature) * sigma;
-		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::sum<float>(feature) * sigma;
-
-		// TODO: add normalise algorithm
-		head = af::max(head, af::constant(1.0, dim, 1, af_dtype::f32) / std::pow(dim, 5));
-		tail = af::max(head, af::constant(1.0, dim, 1, af_dtype::f32) / std::pow(dim, 5));
-		relation_head = af::max(head, af::constant(1.0, dim, 1, af_dtype::f32) / std::pow(dim, 5));
-		relation_tail = af::max(head, af::constant(1.0, dim, 1, af_dtype::f32) / std::pow(dim, 5));
-
-		embedding_entity(af::seq(0, dim - 1), first) = head;
-		embedding_entity(af::seq(0, dim - 1), third) = tail;
-		embedding_relation_head(af::seq(0, dim - 1), second) = relation_head;
-		embedding_relation_tail(af::seq(0, dim - 1), second) = relation_tail;
-		*/
 	}
 
 public:
@@ -188,7 +157,7 @@ class MFactorE
 protected:
 	vector<AF_SFactorE*> factors;
 	vector<Dataset*> dataset;
-	vector<fvec> relation_space;
+	af::array relation_space;
 	vector<mutex*> factors_mtx;
 	mutex acc_space_mtx;
 
@@ -197,7 +166,7 @@ protected:
 	af::array cur_triplet_f;
 
 protected:
-	vector<fvec> acc_space;
+	af::array acc_space;
 
 public:
 	const double margin;
@@ -214,6 +183,7 @@ public:
 		const string& relation_path,
 		const TaskType& task_type,
 		const string& logging_base_path,
+		const string& save_path,
 		int dim,
 		double alpha,
 		double training_threshold,
@@ -222,7 +192,7 @@ public:
 		vector<Dataset*>* datasets = nullptr,
 		int num_slice = 0,
 		Dataset* test_dataset = nullptr)
-		: Model(task_type, logging_base_path),
+		: Model(task_type, logging_base_path, save_path),
 		dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma), cur_triplet(3, af_dtype::u32), cur_triplet_f(3, af_dtype::u32)
 	{
 		logging.record() << "\t[Name]\tMultiple.FactorE";
@@ -240,12 +210,8 @@ public:
 
 		if (datasets != nullptr)
 		{
-			relation_space.resize(this->relation_size);
-			std::cout << "Resized relation space" << std::endl;
-			for (fvec& elem : relation_space)
-			{
-				elem = normalise<fvec>(ones<fvec>(n_factor));
-			}
+			//TODO : Add normalise function
+			relation_space = af::constant(1, n_factor, this->relation_size);
 		}
 
 		for (auto i = 0; i < n_factor; ++i)
@@ -307,7 +273,7 @@ public:
 	{
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array score(n_factor, batch_size - 1);
+		af::array score(n_factor, batch_size);
 
 		for (unsigned int i = 0; i < n_factor; ++i)
 		{
@@ -319,31 +285,41 @@ public:
 		
 	}
 
-	virtual af::array prob_triplets(const af::array& mat_triplet, const vector<pair<pair<unsigned int, unsigned int>, unsigned int>> &triplet_batch)
+	virtual af::array prob_triplets(const af::array& mat_triplet)
 	{
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
 		af::array mat_relation_space(n_factor, batch_size);
-		for (unsigned int i = 0; i < batch_size; ++i)
-		{
-			af::index i_index(i);
-			std::vector<float> fvec_container = arma::conv_to<vector<float>>::from(relation_space[triplet_batch[i].second]);
-			af::array fvec_arr(n_factor, fvec_container.data());
-			mat_relation_space(af::seq(0, n_factor - 1), i_index) = fvec_arr;
-		} 
+		af::array relation_index = mat_triplet(2, af::span);
+		mat_relation_space = relation_space(af::span, relation_index);
 
 		return af::sum(get_error_vec(mat_triplet) * mat_relation_space, 0);
-		//return sum(get_error_vec(triplet) % relation_space[mem_triplet.second]);
 	}
 	virtual double  prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int>& mem_triplet) override { return 0.0f; }
 
 public:
-	virtual void train_triplet(const vector<pair<pair<unsigned int, unsigned int>, unsigned int>>& triplet_batch, vector<size_t>& index_batch) override
+	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t>& index_batch) override
 	{
-		//pair<pair<unsigned int, unsigned int>, unsigned int>* triplet_f = data_model->sample_false_triplet(index);
-		size_t batch_size = triplet_batch.size();
+		size_t batch_size = head_batch.size();
 		af::array mat_triplet(3, batch_size, af::dtype::u32);
 		af::array mat_triplet_f(3, batch_size, af::dtype::u32);
+		mat_triplet(0, af::span) = af::array(1, batch_size, head_batch.data());
+		mat_triplet(1, af::span) = af::array(1, batch_size, relation_batch.data());
+		mat_triplet(2, af::span) = af::array(1, batch_size, tail_batch.data());
+		vector<unsigned int> head_batch_f(batch_size);
+		vector<unsigned int> relation_batch_f(batch_size);
+		vector<unsigned int> tail_batch_f(batch_size);
+		for (unsigned int i = 0; i < batch_size; ++i)
+		{
+			pair<pair<unsigned int, unsigned int>, unsigned int>* triplet_f = data_model->sample_false_triplet(index_batch[i]);
+			head_batch_f[i] = triplet_f->first.first;
+			relation_batch_f[i] = triplet_f->second;
+			tail_batch_f[i] = triplet_f->first.second;
+		}
+		mat_triplet_f(0, af::span) = af::array(1, batch_size, head_batch_f.data());
+		mat_triplet_f(1, af::span) = af::array(1, batch_size, relation_batch_f.data());
+		mat_triplet_f(2, af::span) = af::array(1, batch_size, tail_batch_f.data());
+		/*
 		for (unsigned int i = 0; i < batch_size; ++i)
 		{
 			af::index i_index(i);
@@ -356,60 +332,51 @@ public:
 			mat_triplet_f(1, i_index) = triplet_f->second;
 			mat_triplet_f(2, i_index) = triplet_f->first.second;
 		}
-		/*
-		cur_triplet(0) = triplet.first.first;
-		cur_triplet(1) = triplet.second;
-		cur_triplet(2) = triplet.first.second;
-		cur_triplet_f(0) = triplet_f->first.first;
-		cur_triplet_f(1) = triplet_f->second;
-		cur_triplet_f(2) = triplet_f->first.second;
 		*/
 		af::array margin_arr = af::constant(margin, 1, batch_size);
-		af::array bool_result = prob_triplets(mat_triplet, triplet_batch) - prob_triplets(mat_triplet_f, triplet_batch) - margin_arr;
+		af::array bool_result = prob_triplets(mat_triplet) - prob_triplets(mat_triplet_f) - margin_arr;
 		af::array cond = bool_result > 0.0;
-		bool_result = bool_result * cond;
-		size_t positive_cunt = af::count<size_t>(bool_result);
+		size_t positive_cunt = af::count<size_t>(cond);
 		size_t new_batch_size = batch_size - positive_cunt;
+		cond = cond.as(af::dtype::s32);
+		int* cond_ptr = cond.host<int>();
 		af::array new_mat_triplet(3, new_batch_size, af::dtype::u32);
 		af::array new_mat_triplet_f(3, new_batch_size, af::dtype::u32);
-		af::index new_index(0);
+		unsigned int new_index = 0;
 		for (auto i = 0; i < batch_size; ++i)
 		{
-			af::index i_index(i);
-			if(bool_result(0, i_index) == 0)
-			new_mat_triplet(0, new_index) = mat_triplet(0, i_index);
-			new_mat_triplet(1, new_index) = mat_triplet(1, i_index);
-			new_mat_triplet(2, new_index) = mat_triplet(2, i_index);
-			new_mat_triplet_f(0, new_index) = mat_triplet_f(0, i_index);
-			new_mat_triplet_f(1, new_index) = mat_triplet_f(1, i_index);
-			new_mat_triplet_f(2, new_index) = mat_triplet_f(2, i_index);
+			
+			if (!(cond_ptr[i]))
+			{
+					new_mat_triplet(0, new_index) = mat_triplet(0, i);
+					new_mat_triplet(1, new_index) = mat_triplet(1, i);
+					new_mat_triplet(2, new_index) = mat_triplet(2, i);
+					new_mat_triplet_f(0, new_index) = mat_triplet_f(0, i);
+					new_mat_triplet_f(1, new_index) = mat_triplet_f(1, i);
+					new_mat_triplet_f(2, new_index) = mat_triplet_f(2, i);
+					new_index++;
+			}
 			
 		}
-		if (prob_triplets(mat_triplet, triplet_batch) - prob_triplets(mat_triplet_f, triplet_batch) > margin)
-			return;
-
-		fvec err = get_error_vec(cur_triplet);
-
+		//delete cond_ptr;
+		af::array mat_err = get_error_vec(new_mat_triplet);
+		af::array relation_index = new_mat_triplet(1, af::span);
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			factors_mtx[i]->lock();
-			factors[i]->train(cur_triplet, n_factor * alpha * relation_space[triplet.second][i]);
-			factors[i]->train(cur_triplet_f, -n_factor * alpha * relation_space[triplet.second][i]);
+			factors[i]->train(new_mat_triplet, n_factor * alpha * relation_space(i, relation_index));
+			factors[i]->train(new_mat_triplet_f, -n_factor * alpha * relation_space(i, relation_index));
 			factors_mtx[i]->unlock();
 		}
 
-		acc_space_mtx.lock();
-		acc_space[triplet.second] += err;
-		acc_space_mtx.unlock();
+		//TODO: update the model after calculating mean
+		acc_space(af::span, relation_index) += mat_err;
 	}
 
 	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
 	{
-		acc_space.resize(relation_size);
-		for (fvec& elem : acc_space)
-		{
-			elem = zeros<fvec>(n_factor);
-		}
+		acc_space = af::constant(0, n_factor, relation_size);
+
 
 		bool cont = true;
 		Model::zero_dataset_cur();
@@ -419,33 +386,44 @@ public:
 			Model::train(parallel_thread, dataset);
 		}
 
-		for (auto i = 0; i < relation_size; ++i)
-		{
-			relation_space[i] =
-				normalise<fvec>(max(-acc_space[i], ones<fvec>(n_factor) / dim), 1);
-		}
+		//TODO: Add normalise function
+		relation_space = af::max(-acc_space, af::constant(1, n_factor, relation_size) / dim);
 	}
 
 public:
 	virtual void save(const string& filename) override
 	{
-		ofstream fout(filename + "relation_space.model", ios::binary);
-		storage_vmat<float>::save(relation_space, fout);
+		ofstream fout_1(filename + "saving_status.data", ios::binary);
+		fout_1.write((char*)&epos, sizeof(long long));
+		fout_1.close();
+		string relation_space_filestr = filename + "relation_space.model";
+		const char* relation_space_filename = relation_space_filestr.c_str();
+		string relation_space_keystr = "rel_space";
+		const char* relation_space_key = relation_space_keystr.c_str();
+		af::saveArray(relation_space_key, relation_space, relation_space_filename);
+
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			factors[i]->save(filename, i);
 		}
-		fout.close();
+		
 	}
 
 	virtual void load(const string& filename) override
 	{
-		ifstream fin(filename + "relation_space.model", ios::binary);
-		storage_vmat<float>::load(relation_space, fin);
+		ifstream fin_1(filename + "saving_status.data", ios::binary);
+		fin_1.read((char*)&epos, sizeof(long long));
+		fin_1.close();
+		string relation_space_filestr = filename + "relation_space.model";
+		const char* relation_space_filename = relation_space_filestr.c_str();
+		string relation_space_keystr = "rel_space";
+		const char* relation_space_key = relation_space_keystr.c_str();
+		relation_space = af::readArray(relation_space_filename, relation_space_key);
+
 		for (auto i = 0; i < n_factor; ++i)
 		{
 			factors[i]->load(filename, i);
 		}
-		fin.close();
+		
 	}
 };

@@ -26,10 +26,15 @@ public:
 	int epos;
 
 public:
+	const string save_path;
+
+public:
 	Model(const TaskType &task_type,
-		  const string &logging_base_path)
+		  const string &logging_base_path,
+		  const string& save_path)
 		: task_type(task_type),
-		  logging(*(new ModelLogging(logging_base_path)))
+		  logging(*(new ModelLogging(logging_base_path))),
+		  save_path(save_path)
 	{
 		epos = 0;
 		std::cout << "Ready" << endl;
@@ -78,29 +83,45 @@ public:
 
 public:
 	virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
-	virtual void train_triplet(const vector<pair<pair<unsigned int, unsigned int>, unsigned int>> &triplet_batch, vector<size_t> &index_batch) = 0;
+	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t> &index_batch) = 0;
 
 public:
 	virtual void train_batch(size_t start, size_t length)
 	{
 		size_t end = start + length;
-		vector<pair<pair<unsigned int, unsigned int>, unsigned int>> triplet_batch(length);
+		vector<unsigned int> head_batch(length);
+		vector<unsigned int> relation_batch(length);
+		vector<unsigned int> tail_batch(length);
 		vector<size_t> index_batch(length);
 		for (size_t i = start; i < end; ++i)
 		{
-			triplet_batch.push_back(data_model->data_train[i]);
-			index_batch.push_back(i);
+			head_batch[i - start] = data_model->data_train[i].first.first;
+			relation_batch[i - start] = data_model->data_train[i].second;
+			tail_batch[i - start] = data_model->data_train[i].first.second;
+			index_batch[i - start] = i;
 		}
-		train_triplet(triplet_batch, index_batch);
+		train_triplet(head_batch, relation_batch, tail_batch, index_batch);
 	}
 
 	virtual void train(int parallel_thread, vector<Dataset *> &dataset)
 	{
-		++epos;
-		cout << "train : " << epos << endl;
-		size_t num_each_thread = data_model->data_train.size() / parallel_thread;
+		
+		//size_t num_each_thread = data_model->data_train.size() / parallel_thread;
+		size_t num_cores = 3584;
+		size_t loop = data_model->data_train.size() / num_cores;
 		vector<thread *> threads(parallel_thread);
-
+		for (auto i = 0; i < loop; ++i)
+		{
+			if (i == loop - 1)
+			{
+				train_batch(i * num_cores, data_model->data_train.size() - i * num_cores);
+				//threads[i] = new thread(&Model::train_batch, this, i * num_cores, data_model->data_train.size() - i * num_cores);
+				continue;
+			}
+			train_batch(i * num_cores, num_cores);
+			//threads[i] = new thread(&Model::train_batch, this, i * num_cores, num_cores);
+		}
+		/*
 		for (auto i = 0; i < parallel_thread; ++i)
 		{
 			if (i == parallel_thread - 1)
@@ -110,12 +131,14 @@ public:
 			}
 			threads[i] = new thread(&Model::train_batch, this, i * num_each_thread, num_each_thread);
 		}
-
+		
+		
 		for (auto i = 0; i < parallel_thread; ++i)
 		{
 			threads[i]->join();
 			delete threads[i];
 		}
+		*/
 	}
 
 	void run(int total_epos, int parallel_thread, vector<Dataset *> &dataset)
@@ -123,13 +146,28 @@ public:
 		logging.record() << "\t[Epos]\t" << total_epos;
 
 		--total_epos;
-
+		if (epos != 0)
+		{
+			total_epos -= epos;
+		}
+		cout << endl;
+		cout << "start training from Round : " << epos << endl;
 		ProgressBar prog_bar("Training", total_epos);
 		prog_bar.progress_begin();
+		//af::timer start = af::timer::start();
 		while (total_epos-- > 0)
 		{
+			af::timer start = af::timer::start();
 			++prog_bar.progress;
+			cout << "Round : " << prog_bar.progress << endl;
+			if (!(prog_bar.progress % 100))
+			{
+				cout << prog_bar.progress << "round saveing " << endl;
+				epos = prog_bar.progress;
+				save(save_path);
+			}
 			train(parallel_thread, dataset);
+			cout << "Time : " << af::timer::stop() << endl;
 		}
 		train(parallel_thread, dataset);
 		prog_bar.progress_end();

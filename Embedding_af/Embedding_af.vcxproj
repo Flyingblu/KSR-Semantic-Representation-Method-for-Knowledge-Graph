@@ -100,6 +100,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(AF_PATH)/include;</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(AF_PATH)/lib;</AdditionalLibraryDirectories>
@@ -116,9 +117,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\RDF_parser\progress_bar.cpp" />
     <ClCompile Include="embedding.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\RDF_parser\progress_bar.hpp" />
     <ClInclude Include="DataModel.hpp" />
     <ClInclude Include="Import.hpp" />
     <ClInclude Include="LatentModel_af.hpp" />
