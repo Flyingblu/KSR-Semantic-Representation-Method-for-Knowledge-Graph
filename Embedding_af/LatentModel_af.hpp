@@ -38,14 +38,14 @@ public:
 	{
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = mat_triplet(0, af::seq(0, batch_size - 1));
-		af::array tail_index = mat_triplet(2, af::seq(0, batch_size - 1));
-		af::array relation_index = mat_triplet(1, af::seq(0, batch_size - 1));
+		af::array head_index = mat_triplet(0, af::span);
+		af::array tail_index = mat_triplet(2, af::span);
+		af::array relation_index = mat_triplet(1, af::span);
 
-		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
-		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
-		af::array relation_head = embedding_relation_head(af::seq(0, dim - 1), relation_index);
-		af::array relation_tail = embedding_relation_tail(af::seq(0, dim - 1), relation_index);
+		af::array head = embedding_entity(af::span, head_index);
+		af::array tail = embedding_entity(af::span, tail_index);
+		af::array relation_head = embedding_relation_head(af::span, relation_index);
+		af::array relation_tail = embedding_relation_tail(af::span, relation_index);
 
 		af::array head_feature = head * relation_head;
 		af::array tail_feature = tail * relation_tail;
@@ -53,7 +53,7 @@ public:
 		//af::array result = af::log(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0));
 		
 		//Test version
-		af::array result = af::log(-(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0)));
+		af::array result = af::log(af::abs(af::sum(head_feature * tail_feature, 0) * sigma - af::sum(af::abs(head_feature - tail_feature), 0)));
 		return result;
 	}
 
@@ -61,14 +61,14 @@ public:
 	{
 		af::dim4 dim_arr = new_mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
-		af::array head_index = new_mat_triplet(0, af::seq(0, batch_size - 1));
-		af::array tail_index = new_mat_triplet(2, af::seq(0, batch_size - 1));
-		af::array relation_index = new_mat_triplet(1, af::seq(0, batch_size - 1));
+		af::array head_index = new_mat_triplet(0, af::span);
+		af::array tail_index = new_mat_triplet(2, af::span);
+		af::array relation_index = new_mat_triplet(1, af::span);
 
-		af::array head = embedding_entity(af::seq(0, dim - 1), head_index);
-		af::array tail = embedding_entity(af::seq(0, dim - 1), tail_index);
-		af::array relation_head = embedding_relation_head(af::seq(0, dim - 1), relation_index);
-		af::array relation_tail = embedding_relation_tail(af::seq(0, dim - 1), relation_index);
+		af::array head = embedding_entity(af::span, head_index);
+		af::array tail = embedding_entity(af::span, tail_index);
+		af::array relation_head = embedding_relation_head(af::span, relation_index);
+		af::array relation_tail = embedding_relation_tail(af::span, relation_index);
 
 		af::array head_feature = head * relation_head;
 		af::array tail_feature = tail * relation_tail;
@@ -99,10 +99,10 @@ public:
 		
 
 		//TODO: solve the race condition, calulate the mean of same entity vector
-		embedding_entity(af::seq(0, dim - 1), head_index) = head;
-		embedding_entity(af::seq(0, dim - 1), tail_index) = tail;
-		embedding_relation_head(af::seq(0, dim - 1), relation_index) = relation_head;
-		embedding_relation_tail(af::seq(0, dim - 1), relation_index) = relation_tail;
+		embedding_entity(af::span, head_index) = head;
+		embedding_entity(af::span, tail_index) = tail;
+		embedding_relation_head(af::span, relation_index) = relation_head;
+		embedding_relation_tail(af::span, relation_index) = relation_tail;
 		
 
 	}
@@ -195,6 +195,10 @@ public:
 		: Model(task_type, logging_base_path, save_path),
 		dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma), cur_triplet(3, af_dtype::u32), cur_triplet_f(3, af_dtype::u32)
 	{
+		int ndevice = af::getDeviceCount();
+		cout << "ndevice : " << ndevice << endl;
+		af::setDevice(ndevice - 1);
+
 		logging.record() << "\t[Name]\tMultiple.FactorE";
 		logging.record() << "\t[Dimension]\t" << dim;
 		logging.record() << "\t[Learning Rate]\t" << alpha;
@@ -278,7 +282,7 @@ public:
 		for (unsigned int i = 0; i < n_factor; ++i)
 		{
 			af::index i_index(i);
-			score(i_index, af::seq(0, batch_size - 1)) = factors[i]->prob(mat_triplet);
+			score(i_index, af::span) = factors[i]->prob(mat_triplet);
 		}
 
 		return score;
@@ -295,6 +299,7 @@ public:
 
 		return af::sum(get_error_vec(mat_triplet) * mat_relation_space, 0);
 	}
+
 	virtual double  prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int>& mem_triplet) override { return 0.0f; }
 
 public:

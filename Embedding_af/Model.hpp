@@ -107,7 +107,8 @@ public:
 	{
 		
 		//size_t num_each_thread = data_model->data_train.size() / parallel_thread;
-		size_t num_cores = 3584;
+		//size_t num_cores = 3584;
+		size_t num_cores = data_model->data_train.size();
 		size_t loop = data_model->data_train.size() / num_cores;
 		vector<thread *> threads(parallel_thread);
 		for (auto i = 0; i < loop; ++i)
@@ -144,7 +145,7 @@ public:
 	void run(int total_epos, int parallel_thread, vector<Dataset *> &dataset)
 	{
 		logging.record() << "\t[Epos]\t" << total_epos;
-
+		
 		--total_epos;
 		if (epos != 0)
 		{
