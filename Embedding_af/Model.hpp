@@ -82,7 +82,8 @@ public:
 	}
 
 public:
-	virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
+	//virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
+	virtual af::array prob_triplets(const af::array& mat_triplet) { return af::constant(1, 1, 1); };
 	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t> &index_batch) = 0;
 
 public:
@@ -184,39 +185,84 @@ public:
 	{
 
 		size_t end = start + length;
+		vector<unsigned int> test_head_batch(length);
+		vector<unsigned int> test_relation_batch(length);
+		vector<unsigned int> test_tail_batch(length);
+		for (size_t i = start; i < end; ++i)
+		{
+			pair<pair<int, int>, int> t = test_data_model->data_test_true[i];
+			test_head_batch[i] = t.first.first;
+			test_relation_batch[i] = t.second;
+			test_tail_batch[i] = t.first.second;
+		}
 
-		for (size_t i = 1; i + start <= end; ++i)
+		af::array mat_test_triplet(3, length, af::dtype::u32);
+		mat_test_triplet(0, af::span) = af::array(1, length, test_head_batch.data());
+		mat_test_triplet(1, af::span) = af::array(1, length, test_relation_batch.data());
+		mat_test_triplet(2, af::span) = af::array(1, length, test_tail_batch.data());
+		af::array score = prob_triplets(mat_test_triplet);
+		
+		
+		
+		for (size_t i = start; i < end; ++i)
 		{
 
-			pair<pair<int, int>, int> t = test_data_model->data_test_true[i];
+			//af::timer start = af::timer::start();
 			int rmean = 0;
-			double score_i = prob_triplets(test_data_model->data_test_true[i]);
-
 			if (task_type == LinkPredictionRelation || part == 2)
 			{
+				af::array score_i = af::tile(score(0, i), 1, test_data_model->relation_size);
+				af::array mat_test_triplet_t(3, test_data_model->relation_size, af::dtype::u32);
+				mat_test_triplet_t(0, af::span) = af::tile(mat_test_triplet(0, i), 1, test_data_model->relation_size);
+				mat_test_triplet_t(1, af::span) = af::range(af::dim4(1, test_data_model->relation_size), 1);
+				mat_test_triplet_t(2, af::span) = af::tile(mat_test_triplet(2, i), 1, test_data_model->relation_size);
+				af::array cond = score_i >= prob_triplets(mat_test_triplet_t);
+				cond = cond.as(af::dtype::s32);
+				int* cond_h = cond.host<int>();
+
 				for (auto j = 0; j != test_data_model->relation_size; ++j)
 				{
-					t.second = j;
 
-					if (score_i >= prob_triplets(t))
-						continue;
-
-					++rmean;
+					if (!cond_h[j])
+					{
+						++rmean;
+					}
 				}
 			}
 			else
 			{
+				af::array score_i = af::tile(score(0, i), 1, test_data_model->entity_size);
+				af::array mat_test_triplet_t(3, test_data_model->entity_size, af::dtype::u32);
+				
+				if (task_type == LinkPredictionHead || part == 1)
+				{
+
+					mat_test_triplet_t(0, af::span) = af::range(af::dim4(1, test_data_model->entity_size), 1);
+					mat_test_triplet_t(1, af::span) = af::tile(mat_test_triplet(1, i), 1, test_data_model->entity_size);
+					mat_test_triplet_t(2, af::span) = af::tile(mat_test_triplet(2, i), 1, test_data_model->entity_size);
+				}
+				else 
+				{
+					/*
+					af::dim4 dim_1 = mat_test_triplet_t.dims();
+					cout << "mat_test_triplet_t : " << dim_1[0] << " " << dim_1[1] << endl;
+					af::array test_triplet = af::tile(mat_test_triplet(0, i), 1, test_data_model->relation_size);
+					af::dim4 dim_2 = test_triplet.dims();
+					cout << "test_triplet : " << dim_2[0] << " " << dim_2[1] << endl;
+					*/
+					mat_test_triplet_t(0, af::span) = af::tile(mat_test_triplet(0, i), 1, test_data_model->entity_size);
+					mat_test_triplet_t(1, af::span) = af::tile(mat_test_triplet(1, i), 1, test_data_model->entity_size);
+					mat_test_triplet_t(2, af::span) = af::range(af::dim4(1, test_data_model->entity_size), 1);
+				}
+				af::array cond = score_i >= prob_triplets(mat_test_triplet_t);
+				cond = cond.as(af::dtype::s32);
+				int* cond_h = cond.host<int>();
 				for (auto j = 0; j != test_data_model->entity_size; ++j)
 				{
-					if (task_type == LinkPredictionHead || part == 1)
-						t.first.first = j;
-					else
-						t.first.second = j;
-
-					if (score_i >= prob_triplets(t))
-						continue;
-
-					++rmean;
+					if (!cond_h[j])
+					{
+						++rmean;
+					}
 				}
 			}
 
@@ -232,11 +278,11 @@ public:
 				progress += 100;
 				progress_mtx->unlock();
 			}
+			//cout << "Time : " << af::timer::stop() << endl;
 		}
 	}
 
-	void
-	test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1)
+	void test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1)
 	{
 		best_link_mean = 1e10;
 		best_link_hitatten = 0;
@@ -255,19 +301,35 @@ public:
 		double arr_mean[20] = {0};
 		double arr_total[5] = {0};
 
-		vector<vector<double>> thread_data(parallel_thread, vector<double>(26));
+		//size_t num_cores = test_data_model->data_test_true.size();
+		//parallel_thread = test_data_model->data_test_true.size() / num_cores;
+
+		
 		vector<thread *> threads(parallel_thread);
 		size_t num_each_thread = test_data_model->data_test_true.size() / parallel_thread;
-
+		vector<vector<double>> thread_data(parallel_thread, vector<double>(26));
 		for (auto i = test_data_model->data_test_true.begin(); i != test_data_model->data_test_true.end(); ++i)
 		{
 			++arr_total[test_data_model->relation_type[i->second]];
 		}
-
+		
 		ProgressBar prog_bar("Testing link prediction", test_data_model->data_test_true.size());
+		mutex* progress_mtx = new mutex();
+		prog_bar.progress_begin();
+		for (auto i = 0; i < parallel_thread; ++i)
+		{
+			
+			if (i = parallel_thread - 1)
+			{
+				test_batch(i * num_each_thread, test_data_model->data_test_true.size() - i * num_each_thread, thread_data[i], hit_rank, part, prog_bar.progress, progress_mtx);
+			}
+			test_batch(i * num_each_thread, num_each_thread, thread_data[i], hit_rank, part, prog_bar.progress, progress_mtx);
+			
+		}
+		/*
 		mutex *progress_mtx = new mutex();
 		prog_bar.progress_begin();
-
+		
 		for (auto i = 0; i < parallel_thread; ++i)
 		{
 			if (i == parallel_thread - 1)
@@ -283,7 +345,7 @@ public:
 			threads[i]->join();
 			delete threads[i];
 		}
-
+		*/
 		for (auto i = 0; i < parallel_thread; ++i)
 		{
 			mean += thread_data[i][0];
@@ -297,7 +359,7 @@ public:
 				arr_mean[j] += thread_data[i][6 + j];
 			}
 		}
-
+		
 		prog_bar.progress_end();
 
 		std::cout << endl;

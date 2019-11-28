@@ -68,8 +68,7 @@ public:
 		std::cout << "Finish reading " << file_path << std::endl;
 	}
 
-	void
-	load_training_false(const string &base_dir, const vector<string> &training_false)
+	void load_training_false(const string &base_dir, const vector<string> &training_false)
 	{
 		vector<ifstream *> streams;
 		for (auto i : training_false)

@@ -157,7 +157,7 @@ public:
 
 		size_t end = start + length;
 
-		for (size_t i = 1; i + start <= end; ++i)
+		for (size_t i = start; i < end; ++i)
 		{
 
 			pair<pair<int, int>, int> t = test_data_model->data_test_true[i];

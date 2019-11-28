@@ -161,9 +161,6 @@ protected:
 	vector<mutex*> factors_mtx;
 	mutex acc_space_mtx;
 
-protected:
-	af::array cur_triplet;
-	af::array cur_triplet_f;
 
 protected:
 	af::array acc_space;
@@ -193,7 +190,7 @@ public:
 		int num_slice = 0,
 		Dataset* test_dataset = nullptr)
 		: Model(task_type, logging_base_path, save_path),
-		dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma), cur_triplet(3, af_dtype::u32), cur_triplet_f(3, af_dtype::u32)
+		dim(dim), alpha(alpha), margin(training_threshold), n_factor(n_factor), sigma(sigma)
 	{
 		int ndevice = af::getDeviceCount();
 		cout << "ndevice : " << ndevice << endl;
@@ -300,7 +297,7 @@ public:
 		return af::sum(get_error_vec(mat_triplet) * mat_relation_space, 0);
 	}
 
-	virtual double  prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int>& mem_triplet) override { return 0.0f; }
+	//virtual double  prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int>& mem_triplet) override { return 0.0f; }
 
 public:
 	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t>& index_batch) override
