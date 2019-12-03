@@ -341,14 +341,14 @@ public:
 		size_t positive_cunt = af::count<size_t>(cond);
 		size_t new_batch_size = batch_size - positive_cunt;
 		cond = cond.as(af::dtype::s32);
-		int* cond_ptr = cond.host<int>();
+		int* cond_h = cond.host<int>();
 		af::array new_mat_triplet(3, new_batch_size, af::dtype::u32);
 		af::array new_mat_triplet_f(3, new_batch_size, af::dtype::u32);
 		unsigned int new_index = 0;
 		for (auto i = 0; i < batch_size; ++i)
 		{
 			
-			if (!(cond_ptr[i]))
+			if (!(cond_h[i]))
 			{
 					new_mat_triplet(0, new_index) = mat_triplet(0, i);
 					new_mat_triplet(1, new_index) = mat_triplet(1, i);
@@ -360,7 +360,6 @@ public:
 			}
 			
 		}
-		//delete cond_ptr;
 		af::array mat_err = get_error_vec(new_mat_triplet);
 		af::array relation_index = new_mat_triplet(1, af::span);
 		for (auto i = 0; i < n_factor; ++i)

@@ -200,6 +200,9 @@ public:
 		mat_test_triplet(0, af::span) = af::array(1, length, test_head_batch.data());
 		mat_test_triplet(1, af::span) = af::array(1, length, test_relation_batch.data());
 		mat_test_triplet(2, af::span) = af::array(1, length, test_tail_batch.data());
+		test_head_batch.clear();
+		test_relation_batch.clear();
+		test_tail_batch.clear();
 		af::array score = prob_triplets(mat_test_triplet);
 		
 		
@@ -207,7 +210,8 @@ public:
 		for (size_t i = start; i < end; ++i)
 		{
 
-			//af::timer start = af::timer::start();
+			af::timer start = af::timer::start();
+			
 			int rmean = 0;
 			if (task_type == LinkPredictionRelation || part == 2)
 			{
@@ -219,7 +223,6 @@ public:
 				af::array cond = score_i >= prob_triplets(mat_test_triplet_t);
 				cond = cond.as(af::dtype::s32);
 				int* cond_h = cond.host<int>();
-
 				for (auto j = 0; j != test_data_model->relation_size; ++j)
 				{
 
@@ -228,12 +231,12 @@ public:
 						++rmean;
 					}
 				}
+				af::freeHost(cond_h);
 			}
 			else
 			{
 				af::array score_i = af::tile(score(0, i), 1, test_data_model->entity_size);
 				af::array mat_test_triplet_t(3, test_data_model->entity_size, af::dtype::u32);
-				
 				if (task_type == LinkPredictionHead || part == 1)
 				{
 
@@ -243,13 +246,6 @@ public:
 				}
 				else 
 				{
-					/*
-					af::dim4 dim_1 = mat_test_triplet_t.dims();
-					cout << "mat_test_triplet_t : " << dim_1[0] << " " << dim_1[1] << endl;
-					af::array test_triplet = af::tile(mat_test_triplet(0, i), 1, test_data_model->relation_size);
-					af::dim4 dim_2 = test_triplet.dims();
-					cout << "test_triplet : " << dim_2[0] << " " << dim_2[1] << endl;
-					*/
 					mat_test_triplet_t(0, af::span) = af::tile(mat_test_triplet(0, i), 1, test_data_model->entity_size);
 					mat_test_triplet_t(1, af::span) = af::tile(mat_test_triplet(1, i), 1, test_data_model->entity_size);
 					mat_test_triplet_t(2, af::span) = af::range(af::dim4(1, test_data_model->entity_size), 1);
@@ -264,6 +260,7 @@ public:
 						++rmean;
 					}
 				}
+				af::freeHost(cond_h);
 			}
 
 			result[0] += rmean;
@@ -277,8 +274,9 @@ public:
 				progress_mtx->lock();
 				progress += 100;
 				progress_mtx->unlock();
+
 			}
-			//cout << "Time : " << af::timer::stop() << endl;
+			cout << "Time : " << af::timer::stop() << endl;
 		}
 	}
 
