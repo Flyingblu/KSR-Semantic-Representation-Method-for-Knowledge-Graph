@@ -84,7 +84,7 @@ public:
 public:
 	//virtual double prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int> &triplet) = 0;
 	virtual af::array prob_triplets(const af::array& mat_triplet) { return af::constant(1, 1, 1); };
-	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t> &index_batch) = 0;
+	virtual void train_triplet(vector<unsigned int>& head_batch, vector<unsigned int>& relation_batch, vector<unsigned int>& tail_batch, vector<size_t> &index_batch) = 0;
 
 public:
 	virtual void train_batch(size_t start, size_t length)

@@ -93,9 +93,9 @@ public:
 		//TODO: add normalise algorithm
 		
 		head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		relation_head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		relation_tail = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		tail = af::max(tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_head = af::max(relation_head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 		
 
 		//TODO: solve the race condition, calulate the mean of same entity vector
@@ -278,8 +278,7 @@ public:
 
 		for (unsigned int i = 0; i < n_factor; ++i)
 		{
-			af::index i_index(i);
-			score(i_index, af::span) = factors[i]->prob(mat_triplet);
+			score(i, af::span) = factors[i]->prob(mat_triplet);
 		}
 
 		return score;
@@ -291,7 +290,7 @@ public:
 		af::dim4 dim_arr = mat_triplet.dims();
 		size_t batch_size = dim_arr[1];
 		af::array mat_relation_space(n_factor, batch_size);
-		af::array relation_index = mat_triplet(2, af::span);
+		af::array relation_index = mat_triplet(1, af::span);
 		mat_relation_space = relation_space(af::span, relation_index);
 
 		return af::sum(get_error_vec(mat_triplet) * mat_relation_space, 0);
@@ -300,7 +299,7 @@ public:
 	//virtual double  prob_triplets(const pair<pair<unsigned int, unsigned int>, unsigned int>& mem_triplet) override { return 0.0f; }
 
 public:
-	virtual void train_triplet(vector<unsigned int> head_batch, vector<unsigned int> relation_batch, vector<unsigned int> tail_batch, vector<size_t>& index_batch) override
+	virtual void train_triplet(vector<unsigned int>& head_batch, vector<unsigned int>& relation_batch, vector<unsigned int>& tail_batch, vector<size_t>& index_batch) override
 	{
 		size_t batch_size = head_batch.size();
 		af::array mat_triplet(3, batch_size, af::dtype::u32);
@@ -321,6 +320,7 @@ public:
 		mat_triplet_f(0, af::span) = af::array(1, batch_size, head_batch_f.data());
 		mat_triplet_f(1, af::span) = af::array(1, batch_size, relation_batch_f.data());
 		mat_triplet_f(2, af::span) = af::array(1, batch_size, tail_batch_f.data());
+		
 		/*
 		for (unsigned int i = 0; i < batch_size; ++i)
 		{
@@ -364,10 +364,10 @@ public:
 		af::array relation_index = new_mat_triplet(1, af::span);
 		for (auto i = 0; i < n_factor; ++i)
 		{
-			factors_mtx[i]->lock();
+			//factors_mtx[i]->lock();
 			factors[i]->train(new_mat_triplet, n_factor * alpha * relation_space(i, relation_index));
 			factors[i]->train(new_mat_triplet_f, -n_factor * alpha * relation_space(i, relation_index));
-			factors_mtx[i]->unlock();
+			//factors_mtx[i]->unlock();
 		}
 
 		//TODO: update the model after calculating mean
