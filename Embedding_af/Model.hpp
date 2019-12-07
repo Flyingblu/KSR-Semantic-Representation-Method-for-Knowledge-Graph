@@ -165,7 +165,7 @@ public:
 			if (!(prog_bar.progress % 100))
 			{
 				cout << prog_bar.progress << "round saveing " << endl;
-				epos = prog_bar.progress;
+				epos += prog_bar.progress;
 				save(save_path);
 			}
 			train(parallel_thread, dataset);
