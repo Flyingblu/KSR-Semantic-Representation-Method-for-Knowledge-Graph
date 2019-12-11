@@ -360,6 +360,7 @@ public:
 			}
 			
 		}
+		af::freeHost(cond_h);
 		af::array mat_err = get_error_vec(new_mat_triplet);
 		af::array relation_index = new_mat_triplet(1, af::span);
 		for (auto i = 0; i < n_factor; ++i)

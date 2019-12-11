@@ -129,6 +129,7 @@ public:
 		}
 		cout << endl;
 		cout << "start training from Round : " << epos << endl;
+		cout << "round left : " << total_epos + 1 << endl;
 		ProgressBar prog_bar("Training", total_epos);
 		prog_bar.progress_begin();
 		while (total_epos-- > 0)
