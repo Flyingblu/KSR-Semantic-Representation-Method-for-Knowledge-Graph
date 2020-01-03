@@ -25,7 +25,7 @@ void ProgressBar::detect_progress()
   ofstream read_speed_log;
   ofstream cpu_log;
 
-  string pid = to_string(_getpid());
+  string pid = to_string(getpid());
   string proc_mem_path = "/proc/" + pid + "/statm";
   string proc_read_path = "/proc/" + pid + "/io";
   string proc_cpu_path = "/proc/" + pid + "/stat";

@@ -11,7 +11,7 @@ using namespace std;
 int main()
 {
     srand(time(nullptr));
-    string name_dataset = "3b_reindexed";
+    string name_dataset = "latest-lexemes";
 
     //Cluster dataset
     vector<Dataset *> dataset;
@@ -40,11 +40,11 @@ int main()
 
     Dataset *test_dataset = new Dataset(name_dataset, "/home/anabur/data/save/" + name_dataset + "/", "", "testing_.data", "training_rel_type.data", training_false, "/home/anabur/Github/logs/" + name_dataset + "_loading_log/", false);
     TaskType task = General;
-    MFactorE model("/home/anabur/data/save/" + name_dataset + "/entities.data", "/home/anabur/data/save/" + name_dataset + "/properties.data", task, "/home/anabur/Github/logs/" + name_dataset + "_log/","/home/anabur/data/model/" + name_dataset + "/", 5, 0.01, 0.1, 0.01, 10, &dataset, 3);
-    //MFactorE model("/home/anabur/data/save/" + name_dataset + "/entities.data", "/home/anabur/data/save/" + name_dataset + "/properties.data", task, "/home/anabur/Github/logs/" + name_dataset + "_log/","/home/anabur/data/model/" + name_dataset + "/", 5, 0.01, 0.1, 0.01, 10, nullptr, 3, test_dataset);
+    //MFactorE model("/home/anabur/data/save/" + name_dataset + "/entities.data", "/home/anabur/data/save/" + name_dataset + "/properties.data", task, "/home/anabur/Github/logs/" + name_dataset + "_log/","/home/anabur/data/model/" + name_dataset + "/", 5, 0.01, 0.1, 0.01, 10, &dataset, 3);
+    MFactorE model("/home/anabur/data/save/" + name_dataset + "/entities.data", "/home/anabur/data/save/" + name_dataset + "/properties.data", task, "/home/anabur/Github/logs/" + name_dataset + "_log/","/home/anabur/data/model/" + name_dataset + "/", 5, 0.01, 0.1, 0.01, 10, nullptr, 3, test_dataset);
     //model.load("/home/anabur/data/model/" + name_dataset + "/");
-    model.run(2000, 19, dataset);
-    model.save("/home/anabur/data/model/" + name_dataset + "/");
-    //model.load("/home/anabur/data/model/" + name_dataset +"/");
-    //model.test_link_prediction(10, 0, 19);
+    //model.run(2000, 19, dataset);
+    //model.save("/home/anabur/data/model/" + name_dataset + "/");
+    model.load("/home/anabur/data/model/" + name_dataset +"/");
+    model.test_link_prediction(10, 0, 19, true);
 }
