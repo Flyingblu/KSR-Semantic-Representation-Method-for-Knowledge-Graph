@@ -31,6 +31,7 @@ public:
 
 public:
 	mutex test_progress_mtx;
+	mutex test_result_mtx;
 
 public:
 	Model(const TaskType &task_type,
@@ -158,14 +159,16 @@ public:
 	double best_link_fmean;
 	double best_link_fhitatten;
 
-	void test_batch(size_t start, size_t length, vector<vector<double>> &result, int hit_rank, const int part, long long &progress, mutex *progress_mtx, vector<vector<size_t>>& test_progress, int index)
+	void test_batch(size_t start, size_t length, vector<vector<double>> &result, int hit_rank, const int part, long long &progress, mutex *progress_mtx, vector<vector<size_t>> &test_progress, int index)
 	{
 		bool initialized = false;
 		size_t end = start + length;
 		start = test_progress[index][0];
+		/*
 		test_progress_mtx.lock();
-		cout << index << "th start : " << start << endl;
+		//cout << index << "th start : " << start << endl;
 		test_progress_mtx.unlock();
+		*/
 		for (size_t i = start; i < end; ++i)
 		{
 			pair<pair<int, int>, int> t = test_data_model->data_test_true[i];
@@ -179,9 +182,11 @@ public:
 					if (!initialized)
 					{
 						j = test_progress[index][1];
+						/*
 						test_progress_mtx.lock();
 						cout << index << "th i : " << i << ", j : " << j << endl;
 						test_progress_mtx.unlock();
+						*/
 						initialized = true;
 					}
 					t.second = j;
@@ -199,9 +204,11 @@ public:
 					if (!initialized)
 					{
 						j = test_progress[index][1];
+						/*
 						test_progress_mtx.lock();
 						cout << index << "th i : " << i << ", j : " << j << endl;
 						test_progress_mtx.unlock();
+						*/
 						initialized = true;
 					}
 					if (task_type == LinkPredictionHead || part == 1)
@@ -213,35 +220,42 @@ public:
 						continue;
 
 					++rmean;
-					
 				}
 			}
+			/*
 			test_progress_mtx.lock();
 			cout << " index :" <<  index << endl;
 			cout << "length : " << result.size() << endl;
 			cout << "length_ :" << result[index].size() << endl;
 			cout << " data[0]: " << result[index][0] << endl;
 			test_progress_mtx.unlock();
+			*/
+			test_result_mtx.lock();
 			result[index][0] += rmean;
+			//cout << "Hi" << endl;
 			result[index][4] += 1.0 / (rmean + 1);
 
 			if (rmean < hit_rank)
 				++result[index][1];
-
+			test_result_mtx.unlock();
 			//cout << "Hi" << endl;
 			if (!(i % 100))
-			{	
-				
+			{
+
 				progress_mtx->lock();
 				progress += 100;
 				progress_mtx->unlock();
-				
+
 				if (test_progress_mtx.try_lock())
 				{
 					test_progress[index][0] = i;
 					test_progress_save(test_progress, logging_base_path + "test_progress.txt");
-					test_result_save(result, logging_base_path + "test_result.data");
 					test_progress_mtx.unlock();
+				}
+				if (test_result_mtx.try_lock())
+				{
+					test_result_save(result, logging_base_path + "test_result.data");
+					test_result_mtx.unlock();
 				}
 			}
 		}
@@ -267,15 +281,16 @@ public:
 		double arr_mean[20] = {0};
 		double arr_total[5] = {0};
 
-		vector<vector<double>> thread_data(parallel_thread, vector<double>(26));
+		vector<vector<double>> thread_data(parallel_thread, vector<double>(26, 0));
 		vector<thread *> threads(parallel_thread);
 
 		vector<vector<size_t>> test_progress(parallel_thread, vector<size_t>(2, 0));
-		
+
 		if (load_test_dataset)
 		{
 			test_progress_load(test_progress, logging_base_path + "test_progress.txt");
 			test_result_load(thread_data, logging_base_path + "test_result.data");
+			print_info(thread_data);
 		}
 
 		size_t num_each_thread = test_data_model->data_test_true.size() / parallel_thread;
@@ -418,6 +433,8 @@ public:
 			//cout << iter[0] << ", " << iter[1] << endl;
 		}
 	}
+	
+
 	void test_progress_save(vector<vector<size_t>> &test_progress, string save_path)
 	{
 		ofstream fout(save_path);
@@ -429,30 +446,44 @@ public:
 		}
 		fout.close();
 	}
+
+	template<typename T>
+	void print_info(vector<vector<T>> data)
+	{
+		size_t b_vector_size = data.size();
+		for (auto i = 0; i < b_vector_size; i++)
+		{
+			cout << i << " : ";
+			size_t s_vector_size = data[i].size();
+			for (auto j = 0; j < data[i].size(); j++)
+			{
+				cout << data[i][j] << ", ";
+			}
+			cout << endl;
+		}
+	}
 	template <typename T>
-	void test_result_load(vector<vector<T>>& data, string save_path)
+	void test_result_load(vector<vector<T>> &data, string save_path)
 	{
 		ifstream fin(save_path, ios_base::binary);
 		for (auto &iter : data)
 		{
 			size_t vector_size;
-			fin.read((char*)&vector_size, sizeof(size_t));
-			fin.read((char*)&iter, sizeof(T) * vector_size);
+			fin.read((char *)&vector_size, sizeof(size_t));
+			fin.read((char *)&iter.front(), sizeof(T) * vector_size);
 		}
 		fin.close();
-
 	}
 	template <typename T>
-	void test_result_save(vector<vector<T>>& data, string save_path)
+	void test_result_save(vector<vector<T>> &data, string save_path)
 	{
 		ofstream fout(save_path, ios_base::binary);
 		for (auto &iter : data)
 		{
 			size_t vector_size = iter.size();
-			fout.write((char*)&vector_size, sizeof(size_t));
-			fout.write((char*)&iter, sizeof(T) * vector_size);
+			fout.write((char *)&vector_size, sizeof(size_t));
+			fout.write((char *)&iter.front(), sizeof(T) * vector_size);
 		}
 		fout.close();
-
 	}
 };
