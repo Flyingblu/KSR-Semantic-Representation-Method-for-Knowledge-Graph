@@ -11,7 +11,7 @@ using namespace std;
 int main()
 {
     srand(time(nullptr));
-    string name_dataset = "latest-lexemes";
+    string name_dataset = "3b_reindexed";
 
     //Cluster dataset
     vector<Dataset *> dataset;
@@ -46,5 +46,5 @@ int main()
     //model.run(2000, 19, dataset);
     //model.save("/home/anabur/data/model/" + name_dataset + "/");
     model.load("/home/anabur/data/model/" + name_dataset +"/");
-    model.test_link_prediction(10, 0, 19, true);
+    model.test_link_prediction(10, 0, 19, false);
 }

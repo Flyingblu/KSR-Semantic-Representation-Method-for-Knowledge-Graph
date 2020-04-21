@@ -33,3 +33,4 @@ Local_file/
 *.p7s
 
 Embedding_af/packages
+Embedding/build/

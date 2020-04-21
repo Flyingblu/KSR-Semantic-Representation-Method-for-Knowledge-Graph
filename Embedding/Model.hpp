@@ -161,14 +161,16 @@ public:
 
 	void test_batch(size_t start, size_t length, vector<vector<double>> &result, int hit_rank, const int part, long long &progress, mutex *progress_mtx, vector<vector<size_t>> &test_progress, int index)
 	{
-		bool initialized = false;
+		
 		size_t end = start + length;
 		start = test_progress[index][0];
-		/*
+
+
 		test_progress_mtx.lock();
-		//cout << index << "th start : " << start << endl;
+		cout << index << "th start : " << start << endl;
+		cout << "result[" << index << "][0] : " << result[index][0] << endl;
 		test_progress_mtx.unlock();
-		*/
+		
 		for (size_t i = start; i < end; ++i)
 		{
 			pair<pair<int, int>, int> t = test_data_model->data_test_true[i];
@@ -179,16 +181,6 @@ public:
 			{
 				for (auto j = 0; j != test_data_model->relation_size; ++j)
 				{
-					if (!initialized)
-					{
-						j = test_progress[index][1];
-						/*
-						test_progress_mtx.lock();
-						cout << index << "th i : " << i << ", j : " << j << endl;
-						test_progress_mtx.unlock();
-						*/
-						initialized = true;
-					}
 					t.second = j;
 
 					if (score_i >= prob_triplets(t))
@@ -201,16 +193,6 @@ public:
 			{
 				for (auto j = 0; j != test_data_model->entity_size; ++j)
 				{
-					if (!initialized)
-					{
-						j = test_progress[index][1];
-						/*
-						test_progress_mtx.lock();
-						cout << index << "th i : " << i << ", j : " << j << endl;
-						test_progress_mtx.unlock();
-						*/
-						initialized = true;
-					}
 					if (task_type == LinkPredictionHead || part == 1)
 						t.first.first = j;
 					else
@@ -222,23 +204,19 @@ public:
 					++rmean;
 				}
 			}
-			/*
-			test_progress_mtx.lock();
-			cout << " index :" <<  index << endl;
-			cout << "length : " << result.size() << endl;
-			cout << "length_ :" << result[index].size() << endl;
-			cout << " data[0]: " << result[index][0] << endl;
-			test_progress_mtx.unlock();
-			*/
+			
+			
+			
 			test_result_mtx.lock();
 			result[index][0] += rmean;
-			//cout << "Hi" << endl;
+			
 			result[index][4] += 1.0 / (rmean + 1);
 
 			if (rmean < hit_rank)
 				++result[index][1];
 			test_result_mtx.unlock();
-			//cout << "Hi" << endl;
+			
+			
 			if (!(i % 100))
 			{
 
@@ -262,7 +240,7 @@ public:
 	}
 
 	void
-	test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1, bool load_test_dataset = false)
+	test_link_prediction(int hit_rank = 10, const int part = 0, int parallel_thread = 1, bool load_test_result = false)
 	{
 		best_link_mean = 1e10;
 		best_link_hitatten = 0;
@@ -286,7 +264,7 @@ public:
 
 		vector<vector<size_t>> test_progress(parallel_thread, vector<size_t>(2, 0));
 
-		if (load_test_dataset)
+		if (load_test_result)
 		{
 			test_progress_load(test_progress, logging_base_path + "test_progress.txt");
 			test_result_load(thread_data, logging_base_path + "test_result.data");
@@ -430,7 +408,6 @@ public:
 		{
 			char waste;
 			fin >> iter[0] >> waste >> iter[1];
-			//cout << iter[0] << ", " << iter[1] << endl;
 		}
 	}
 	
@@ -438,11 +415,10 @@ public:
 	void test_progress_save(vector<vector<size_t>> &test_progress, string save_path)
 	{
 		ofstream fout(save_path);
-		//cout << "save ..." << endl;
+		cout << "save ..." << endl;
 		for (auto &iter : test_progress)
 		{
 			fout << iter[0] << ", " << iter[1] << endl;
-			//cout << iter[0] << ", " << iter[1] << endl;
 		}
 		fout.close();
 	}
