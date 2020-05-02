@@ -31,3 +31,11 @@ double sign(const double& x)
 	else
 		return x>0?+1:-1;
 }
+
+af::array af_normalise_vec(af::array vec, const int dim_1, const int p)
+{
+	af::array Denominator = af::array(dim_1);
+	Denominator = af::norm(vec, AF_NORM_VECTOR_P, p);
+	af::array normlised_vec = vec / Denominator;
+	return normlised_vec;
+}

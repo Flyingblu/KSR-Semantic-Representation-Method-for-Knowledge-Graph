@@ -28,10 +28,10 @@ public:
 	AF_SFactorE(int dim, unsigned int entity_count, unsigned int relation_count, double sigma, int n_factor)
 		: dim(dim), sigma(sigma), n_factor(n_factor)
 	{
-		// I got rid of the normalise function here, which can make the entity embedding doesn't have unit p-norm. 
-		embedding_entity = af::randu(dim, entity_count);
-		embedding_relation_head = af::randu(dim, relation_count);
-		embedding_relation_tail = af::randu(dim, relation_count);
+		
+		embedding_entity = af::tile(af_normalise_vec(af::randu(dim), dim, 2), 1, entity_count);
+		embedding_relation_head = af::tile(af_normalise_vec(af::randu(dim), dim, 2), 1, relation_count);
+		embedding_relation_tail = af::tile(af_normalise_vec(af::randu(dim), dim, 2), 1, relation_count);
 	}
 
 	af::array prob(const af::array& mat_triplet)
@@ -84,19 +84,36 @@ public:
 		cout << "dim of alpha :" << dim_alpha[0] << ", " << dim_alpha[1];
 		af::dim4 dim_rel_head = relation_head.dims();
 		*/
+
 		//Real
 		head += -alpha * grad * relation_head + alpha * relation_head * tail_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 
-		//TODO: add normalise algorithm
+		//normalise algorithm
 		
-		head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		tail = af::max(tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		relation_head = af::max(relation_head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		//head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		gfor(af::seq i, batch_size)
+		{
+			head(af::span, i) = af_normalise_vec(af::max(head(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
+		}
 		
+		//tail = af::max(tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		gfor(af::seq i, batch_size)
+		{
+			tail(af::span, i) = af_normalise_vec(af::max(tail(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
+		}
+		//relation_head = af::max(relation_head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		gfor(af::seq i, batch_size)
+		{
+			relation_head(af::span, i) = af_normalise_vec(af::max(relation_head(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
+		}
+		//relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		gfor(af::seq i, batch_size)
+		{
+			relation_tail(af::span, i) = af_normalise_vec(af::max(relation_tail(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
+		}
 
 		//TODO: solve the race condition, calulate the mean of same entity vector
 		embedding_entity(af::span, head_index) = head;
@@ -211,8 +228,9 @@ public:
 
 		if (datasets != nullptr)
 		{
-			//TODO : Add normalise function
-			relation_space = af::constant(1, n_factor, this->relation_size);
+			//normalise function
+			af::array normalised_arr = af_normalise_vec(af::constant(1, n_factor), n_factor, 2);
+			relation_space = af::tile(normalised_arr, 1, this->relation_size);
 		}
 
 		for (auto i = 0; i < n_factor; ++i)
@@ -377,7 +395,7 @@ public:
 
 	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
 	{
-		acc_space = af::constant(0, n_factor, relation_size);
+		acc_space = af::constant(0, n_factor);
 
 
 		bool cont = true;
@@ -388,8 +406,9 @@ public:
 			Model::train(parallel_thread, dataset);
 		}
 
-		//TODO: Add normalise function
-		relation_space = af::max(-acc_space, af::constant(1, n_factor, relation_size) / dim);
+		//normalise function
+		af::array normalise_arr = af_normalise_vec(af::max(-acc_space, af::constant(1, n_factor) / dim), n_factor, 2);
+		relation_space = af::tile(normalise_arr, 1, relation_size);
 	}
 
 public:
