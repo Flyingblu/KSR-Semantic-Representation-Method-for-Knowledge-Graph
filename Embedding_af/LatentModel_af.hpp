@@ -75,8 +75,8 @@ public:
 		af::array feature = head_feature * tail_feature;
 		af::array grad = af::sign(head_feature - tail_feature);
 		grad = -(grad - 0.5) * 2;
-		
-		
+
+
 		//Test
 		alpha = af::tile(alpha, dim);
 		/*
@@ -90,38 +90,31 @@ public:
 		relation_head += -alpha * grad * head + alpha * head * tail_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 		tail += alpha * grad * relation_tail + alpha * relation_tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
 		relation_tail += alpha * grad * tail + alpha * tail * head_feature / af::tile(af::sum(feature, 0), dim) * sigma;
+		
+		head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		tail = af::max(tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
+		relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
 
 		//normalise algorithm
+		//af::timer start = af::timer::start();
+		//cout << "looping " << endl;
+		head = head / af::tile(af::sqrt(af::sum(af::pow(head, 2), 0)), dim);
+		tail = tail / af::tile(af::sqrt(af::sum(af::pow(tail, 2), 0)), dim);
+		relation_head = relation_head / af::tile(af::sqrt(af::sum(af::pow(relation_head, 2), 0)), dim);
+		relation_tail = relation_tail / af::tile(af::sqrt(af::sum(af::pow(relation_tail, 2), 0)), dim);
 		
-		//head = af::max(head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		gfor(af::seq i, batch_size)
-		{
-			head(af::span, i) = af_normalise_vec(af::max(head(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
-		}
-		
-		//tail = af::max(tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		gfor(af::seq i, batch_size)
-		{
-			tail(af::span, i) = af_normalise_vec(af::max(tail(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
-		}
-		//relation_head = af::max(relation_head, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		gfor(af::seq i, batch_size)
-		{
-			relation_head(af::span, i) = af_normalise_vec(af::max(relation_head(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
-		}
-		//relation_tail = af::max(relation_tail, af::constant(1.0, dim, batch_size, af_dtype::f32) / std::pow(dim, 5));
-		gfor(af::seq i, batch_size)
-		{
-			relation_tail(af::span, i) = af_normalise_vec(af::max(relation_tail(af::span, i), af::constant(1.0, dim, af_dtype::f32) / std::pow(dim, 5)), dim, 2);
-		}
+		//cout << "Time : " << af::timer::stop() << endl;
+		//cout << "end looping" << endl;
 
+		
 		//TODO: solve the race condition, calulate the mean of same entity vector
 		embedding_entity(af::span, head_index) = head;
 		embedding_entity(af::span, tail_index) = tail;
 		embedding_relation_head(af::span, relation_index) = relation_head;
 		embedding_relation_tail(af::span, relation_index) = relation_tail;
 		
-
+		//cout << "train finishe" << endl;
 	}
 
 public:
@@ -390,12 +383,14 @@ public:
 		}
 
 		//TODO: update the model after calculating mean
+
+		//TODO : to be Solved 
 		acc_space(af::span, relation_index) += mat_err;
 	}
 
 	virtual void train(int parallel_thread, vector<Dataset*>& dataset) override
 	{
-		acc_space = af::constant(0, n_factor);
+		acc_space = af::constant(0, n_factor, relation_size);
 
 
 		bool cont = true;
@@ -407,8 +402,11 @@ public:
 		}
 
 		//normalise function
-		af::array normalise_arr = af_normalise_vec(af::max(-acc_space, af::constant(1, n_factor) / dim), n_factor, 2);
-		relation_space = af::tile(normalise_arr, 1, relation_size);
+		
+		af::array normalise_arr = af::max(-1 * acc_space , af::constant(1, n_factor, relation_size) / dim);
+		normalise_arr = normalise_arr / af::tile(af::sqrt(af::sum(af::pow(normalise_arr, 2), 0)), n_factor);
+		relation_space  = normalise_arr;
+		
 	}
 
 public:

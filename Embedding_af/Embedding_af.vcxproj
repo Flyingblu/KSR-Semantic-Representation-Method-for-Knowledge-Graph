@@ -101,6 +101,8 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(AF_PATH)/include;</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(AF_PATH)/lib;</AdditionalLibraryDirectories>
@@ -110,6 +112,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(AF_PATH)/include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>AF_RELEASE</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(AF_PATH)/lib;</AdditionalLibraryDirectories>

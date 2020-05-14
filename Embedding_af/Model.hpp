@@ -111,7 +111,7 @@ public:
 		//size_t num_cores = 3584;
 		size_t num_cores = data_model->data_train.size();
 		size_t loop = data_model->data_train.size() / num_cores;
-		vector<thread *> threads(parallel_thread);
+		//vector<thread *> threads(parallel_thread);
 		for (auto i = 0; i < loop; ++i)
 		{
 			if (i == loop - 1)
